@@ -41,4 +41,6 @@ brew cask install google-chrome
 brew cask install firefox
 brew cask install brave-browser-nightly
 brew cask install tor-browser
-
+# Fonts
+brew tap homebrew/cask-fonts
+brew cask install font-fira-code
