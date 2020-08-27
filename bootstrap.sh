@@ -15,6 +15,8 @@ echo "source $(brew --prefix nvm)/nvm.sh" >> ~/.zshrc
 . ~/.zshrc
 nvm install stable
 # Apps via casks
+brew cask install viscosity
+brew cask install private-internet-access
 brew cask install iterm2
 brew cask install docker
 brew cask install alfred
