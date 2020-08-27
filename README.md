@@ -7,7 +7,7 @@ Guidelines and scripts to setup a new Mac for web development.
 2. Should not be necessary, but to avoid Mac OS nagging you, make sure Apple ID and Google Accounts are configured in System Preferences.
 3. Install Xcode developer tools separately to avoid having to confirm in the GUI while installing the scripted apps.
 
-## Tun the script
+## Run the script
 
 ```
 ./bootstrap.sh
