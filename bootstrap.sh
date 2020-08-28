@@ -35,6 +35,7 @@ brew cask install zoom
 brew cask install microsoft-teams
 brew cask install slack
 brew cask install obs
+brew cask install spotify
 # Apps with preferences
 brew cask install moom
 defaults import com.manytricks.Moom Moom.plist
