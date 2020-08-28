@@ -30,7 +30,6 @@ brew cask install evernote
 brew cask install standard-notes
 brew cask install figma
 brew cask install adobe-creative-cloud
-brew cask install harvest
 brew cask install zoom
 brew cask install microsoft-teams
 brew cask install slack
@@ -39,6 +38,14 @@ brew cask install spotify
 # Apps with preferences
 brew cask install moom
 defaults import com.manytricks.Moom Moom.plist
+# Install mas (Mac App Store CLI)
+brew install mas
+# EasyRes
+mas install 688211836
+# Harvest
+mas install 506189836
+# Xcode
+mas install 497799835
 # Browsers
 brew cask install google-chrome
 brew cask install firefox
