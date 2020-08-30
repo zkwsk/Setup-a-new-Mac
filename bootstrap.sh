@@ -35,8 +35,9 @@ brew cask install microsoft-teams
 brew cask install slack
 brew cask install obs
 brew cask install spotify
-# Apps with preferences
-brew cask install moom
+# Moom
+mas install 419330170
+# Copy over Moom preferences
 defaults import com.manytricks.Moom Moom.plist
 # Install mas (Mac App Store CLI)
 brew install mas
