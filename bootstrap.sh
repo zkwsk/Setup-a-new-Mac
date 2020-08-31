@@ -14,6 +14,7 @@ echo "export NVM_DIR=~/.nvm" >> ~/.zshrc
 echo "source $(brew --prefix nvm)/nvm.sh" >> ~/.zshrc
 . ~/.zshrc
 nvm install stable
+brew install yarn
 # Apps via casks
 brew cask install viscosity
 brew cask install private-internet-access
