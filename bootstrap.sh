@@ -36,6 +36,7 @@ brew cask install microsoft-teams
 brew cask install slack
 brew cask install obs
 brew cask install spotify
+brew cask install cyberduck
 # Moom
 mas install 419330170
 # Copy over Moom preferences
