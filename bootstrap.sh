@@ -16,33 +16,35 @@ echo "source $(brew --prefix nvm)/nvm.sh" >> ~/.zshrc
 nvm install stable
 brew install yarn
 # Apps via casks
-brew cask install viscosity
-brew cask install private-internet-access
-brew cask install iterm2
-brew cask install docker
-brew cask install alfred
-brew cask install dropbox
 brew cask install 1password
-brew cask install visual-studio-code
-brew cask install sourcetree
-brew cask install tableplus
-brew cask install dbeaver-community
-brew cask install evernote
-brew cask install standard-notes
-brew cask install figma
 brew cask install adobe-creative-cloud
-brew cask install zoom
-brew cask install microsoft-teams
-brew cask install slack
-brew cask install obs
-brew cask install spotify
+brew cask install alfred
 brew cask install cyberduck
+brew cask install dbeaver-community
+brew cask install docker
+brew cask install dropbox
+brew cask install evernote
+brew cask install figma
+brew cask install iterm2
+brew cask install microsoft-teams
+brew cask install obs
+brew cask install private-internet-access
+brew cask install slack
+brew cask install sourcetree
+brew cask install spotify
+brew cask install standard-notes
+brew cask install tableplus
+brew cask install virtualbox
+brew cask install viscosity
+brew cask install visual-studio-code
+brew cask install vlc
+brew cask install zoom
+# Install mas (Mac App Store CLI)
+brew install mas
 # Moom
 mas install 419330170
 # Copy over Moom preferences
 defaults import com.manytricks.Moom Moom.plist
-# Install mas (Mac App Store CLI)
-brew install mas
 # EasyRes
 mas install 688211836
 # Harvest
