@@ -19,6 +19,7 @@ brew install yarn
 brew cask install 1password
 brew cask install adobe-creative-cloud
 brew cask install alfred
+brew cask install charles
 brew cask install cyberduck
 brew cask install dbeaver-community
 brew cask install docker
