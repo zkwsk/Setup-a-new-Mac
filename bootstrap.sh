@@ -29,6 +29,7 @@ brew cask install figma
 brew cask install iterm2
 brew cask install microsoft-teams
 brew cask install obs
+brew cask install oracle-jdk
 brew cask install postman
 brew cask install private-internet-access
 brew cask install slack
