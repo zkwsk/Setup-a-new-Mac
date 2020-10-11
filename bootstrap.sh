@@ -33,6 +33,7 @@ brew cask install oracle-jdk
 brew cask install postman
 brew cask install private-internet-access
 brew cask install slack
+brew cask install soundflower soundflowerbed
 brew cask install sourcetree
 brew cask install spotify
 brew cask install standard-notes
