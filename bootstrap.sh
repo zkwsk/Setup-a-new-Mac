@@ -23,6 +23,8 @@ brew cask install charles
 brew cask install cyberduck
 brew cask install dbeaver-community
 brew cask install docker
+brew install docker-machine
+brew services start docker-machine
 brew cask install dropbox
 brew cask install evernote
 brew cask install figma
