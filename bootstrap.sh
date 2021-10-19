@@ -16,35 +16,35 @@ echo "source $(brew --prefix nvm)/nvm.sh" >> ~/.zshrc
 nvm install stable
 brew install yarn
 # Apps via casks
-brew cask install 1password
-brew cask install adobe-creative-cloud
-brew cask install alfred
-brew cask install charles
-brew cask install cyberduck
-brew cask install dbeaver-community
-brew cask install docker
+brew install --cask 1password
+brew install --cask adobe-creative-cloud
+brew install --cask alfred
+brew install --cask charles
+brew install --cask cyberduck
+brew install --cask dbeaver-community
+brew install --cask docker
 brew install docker-machine
 brew services start docker-machine
-brew cask install dropbox
-brew cask install evernote
-brew cask install figma
-brew cask install iterm2
-brew cask install microsoft-teams
-brew cask install obs
-brew cask install oracle-jdk
-brew cask install postman
-brew cask install private-internet-access
-brew cask install slack
-brew cask install soundflower soundflowerbed
-brew cask install sourcetree
-brew cask install spotify
-brew cask install standard-notes
-brew cask install tableplus
-brew cask install virtualbox
-brew cask install viscosity
-brew cask install visual-studio-code
-brew cask install vlc
-brew cask install zoom
+brew install --cask dropbox
+brew install --cask evernote
+brew install --cask figma
+brew install --cask iterm2
+brew install --cask microsoft-teams
+brew install --cask obs
+brew install --cask oracle-jdk
+brew install --cask postman
+brew install --cask private-internet-access
+brew install --cask slack
+brew install --cask soundflower soundflowerbed
+brew install --cask sourcetree
+brew install --cask spotify
+brew install --cask standard-notes
+brew install --cask tableplus
+brew install --cask virtualbox
+brew install --cask viscosity
+brew install --cask visual-studio-code
+brew install --cask vlc
+brew install --cask zoom
 # Install mas (Mac App Store CLI)
 brew install mas
 # Moom
@@ -58,10 +58,10 @@ mas install 506189836
 # Xcode
 mas install 497799835
 # Browsers
-brew cask install google-chrome
-brew cask install firefox
-brew cask install brave-browser-nightly
-brew cask install tor-browser
+brew install --cask google-chrome
+brew install --cask firefox
+brew install --cask brave-browser-nightly
+brew install --cask tor-browser
 # Fonts
 brew tap homebrew/cask-fonts
-brew cask install font-fira-code
+brew install --cask font-fira-code
