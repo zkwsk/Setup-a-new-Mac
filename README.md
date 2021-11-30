@@ -10,8 +10,10 @@ Guidelines and scripts to setup a new Mac for web development.
 ## Run the script
 
 ```
-./bootstrap.sh
+sudo ./bootstrap.sh
 ```
+
+(Sudo is required in order to copy keyboard layouts with sudo privileges)
 
 ## Post-install
 
