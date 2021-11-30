@@ -1,3 +1,5 @@
+# Copy over a modified Danish keyboard layout that has dead keys removed for easily typing characters such as ` ´ ^ ~
+cp danish.keylayout /Library/Keyboard\ Layouts
 # Make projects directory
 mkdir ~/projects
 # Brew (will install Xcode command line tools as well) 
