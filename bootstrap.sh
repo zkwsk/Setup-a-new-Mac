@@ -1,9 +1,12 @@
+#!/bin/bash
 # Copy over a modified Danish keyboard layout that has dead keys removed for easily typing characters such as ` ´ ^ ~
 cp danish.keylayout /Library/Keyboard\ Layouts
 # Make projects directory
 mkdir ~/projects
 # Brew (will install Xcode command line tools as well) 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/work/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
 brew update
 # Git
 brew install git
@@ -11,11 +14,24 @@ brew install git
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 # NVM
 brew install nvm
+
+# Setup NVM
 mkdir ~/.nvm
-echo "export NVM_DIR=~/.nvm" >> ~/.zshrc
-echo "source $(brew --prefix nvm)/nvm.sh" >> ~/.zshrc
+
+( 
+    echo ""; echo "";
+    echo "export NVM_DIR=\"$HOME/.nvm\"";
+    echo "# This loads nvm";
+    echo "[ -s \"/opt/homebrew/opt/nvm/nvm.sh\" ] && \. \"/opt/homebrew/opt/nvm/nvm.sh\"";
+    echo "# This loads nvm bash_completion";
+    echo "[ -s \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\" ] && \. \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\""
+    echo "source $(brew --prefix nvm)/nvm.sh"
+) >>~/.zshrc
+
 . ~/.zshrc
+# Install latest "stable" version of Node via NVM
 nvm install stable
+# Yarn
 brew install yarn
 # Apps via casks
 brew install --cask 1password
