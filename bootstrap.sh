@@ -29,6 +29,19 @@ mkdir ~/.nvm
 ) >>~/.zshrc
 
 . ~/.zshrc
+# Install PHP
+brew install php
+
+# Setup PHP
+sudo bash -c '( 
+    echo ""; echo "";
+    echo "LoadModule php_module /opt/homebrew/opt/php/lib/httpd/modules/libphp.so";
+    echo "<FilesMatch \.php$>";
+    echo "  SetHandler application/x-httpd-php";
+    echo "</FilesMatch>";
+) >>/etc/apache2/httpd.conf'
+sudo apachectl -k graceful
+
 # Install latest "stable" version of Node via NVM
 nvm install stable
 # Yarn
@@ -41,11 +54,10 @@ brew install --cask charles
 brew install --cask cyberduck
 brew install --cask dbeaver-community
 brew install --cask docker
-brew install docker-machine
-brew services start docker-machine
 brew install --cask dropbox
 brew install --cask evernote
 brew install --cask figma
+brew install --cask hazel
 brew install --cask iterm2
 brew install --cask microsoft-teams
 brew install --cask obs
@@ -63,6 +75,8 @@ brew install --cask viscosity
 brew install --cask visual-studio-code
 brew install --cask vlc
 brew install --cask zoom
+brew install docker-machine
+brew services start docker-machine
 # Install mas (Mac App Store CLI)
 brew install mas
 # Moom
