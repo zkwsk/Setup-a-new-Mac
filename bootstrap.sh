@@ -15,6 +15,9 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/too
 # NVM
 brew install nvm
 
+# Install Python
+brew install python
+
 # Setup NVM
 mkdir ~/.nvm
 
