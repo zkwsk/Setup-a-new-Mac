@@ -101,3 +101,5 @@ brew install --cask tor-browser
 brew tap homebrew/cask-fonts
 brew install --cask font-fira-code
 brew install --cask discord
+
+brew install graphviz
