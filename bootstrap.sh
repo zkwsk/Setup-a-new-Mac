@@ -92,6 +92,8 @@ mas install 688211836
 mas install 506189836
 # Xcode
 mas install 497799835
+# Outlook
+brew install --cask microsoft-outlook
 # Browsers
 brew install --cask google-chrome
 brew install --cask firefox
