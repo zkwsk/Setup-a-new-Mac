@@ -68,6 +68,7 @@ brew install --cask oracle-jdk
 brew install --cask postman
 brew install --cask private-internet-access
 brew install --cask slack
+brew install --cask discord
 brew install --cask soundflower soundflowerbed
 brew install --cask sourcetree
 brew install --cask spotify
@@ -92,8 +93,9 @@ mas install 688211836
 mas install 506189836
 # Xcode
 mas install 497799835
-# Outlook
+# Office
 brew install --cask microsoft-outlook
+brew install --cask libreoffice
 # Browsers
 brew install --cask google-chrome
 brew install --cask firefox
@@ -102,6 +104,6 @@ brew install --cask tor-browser
 # Fonts
 brew tap homebrew/cask-fonts
 brew install --cask font-fira-code
-brew install --cask discord
+
 
 brew install graphviz
