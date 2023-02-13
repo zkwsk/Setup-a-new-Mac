@@ -104,6 +104,5 @@ brew install --cask tor-browser
 # Fonts
 brew tap homebrew/cask-fonts
 brew install --cask font-fira-code
-
-
 brew install graphviz
+brew install --cask altair-graphql-client
