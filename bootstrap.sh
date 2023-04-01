@@ -79,6 +79,9 @@ brew install --cask viscosity
 brew install --cask visual-studio-code
 brew install --cask vlc
 brew install --cask zoom
+brew install --cask ngrok
+brew install --cask altair-graphql-client
+brew install graphviz
 brew install docker-machine
 brew services start docker-machine
 # Install mas (Mac App Store CLI)
@@ -104,5 +107,3 @@ brew install --cask tor-browser
 # Fonts
 brew tap homebrew/cask-fonts
 brew install --cask font-fira-code
-brew install graphviz
-brew install --cask altair-graphql-client
