@@ -1,17 +1,23 @@
 #!/bin/bash
+
 # Copy over a modified Danish keyboard layout that has dead keys removed for easily typing characters such as ` ´ ^ ~
 cp danish.keylayout /Library/Keyboard\ Layouts
+
 # Make projects directory
 mkdir ~/projects
+
 # Brew (will install Xcode command line tools as well) 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/work/.zprofile
 eval "$(/opt/homebrew/bin/brew shellenv)"
 brew update
+
 # Git
 brew install git
+
 # Oh-my-zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
 # NVM
 brew install nvm
 
@@ -47,8 +53,10 @@ sudo apachectl -k graceful
 
 # Install latest "stable" version of Node via NVM
 nvm install stable
+
 # Yarn
 brew install yarn
+
 # Apps via casks
 brew install --cask 1password
 brew install --cask adobe-creative-cloud
@@ -84,26 +92,36 @@ brew install --cask altair-graphql-client
 brew install graphviz
 brew install docker-machine
 brew services start docker-machine
+
 # Install mas (Mac App Store CLI)
 brew install mas
+
 # Moom
 mas install 419330170
+
 # Copy over Moom preferences
 defaults import com.manytricks.Moom Moom.plist
+
 # EasyRes
 mas install 688211836
+
 # Harvest
 mas install 506189836
+
 # Xcode
 mas install 497799835
+
 # Office
 brew install --cask microsoft-outlook
 brew install --cask libreoffice
+
 # Browsers
 brew install --cask google-chrome
 brew install --cask firefox
 brew install --cask brave-browser-nightly
 brew install --cask tor-browser
+brew install --cask arc
+
 # Fonts
 brew tap homebrew/cask-fonts
 brew install --cask font-fira-code
