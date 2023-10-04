@@ -89,6 +89,7 @@ brew install --cask vlc
 brew install --cask zoom
 brew install --cask ngrok
 brew install --cask altair-graphql-client
+brew install --cask keycastr
 brew install graphviz
 brew install docker-machine
 brew services start docker-machine
