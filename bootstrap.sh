@@ -97,6 +97,12 @@ brew services start docker-machine
 # Install mas (Mac App Store CLI)
 brew install mas
 
+brew install rust
+brew install go
+
+# Act - run Github Actions locally
+brew install act
+
 # Moom
 mas install 419330170
 
