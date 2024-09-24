@@ -57,6 +57,12 @@ nvm install stable
 # Yarn
 brew install yarn
 
+# Deno
+brew install deno
+
+# Bun
+brew install oven-sh/bun/bun
+
 # Apps via casks
 brew install --cask 1password
 brew install --cask adobe-creative-cloud
