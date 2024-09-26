@@ -100,6 +100,9 @@ brew install graphviz
 brew install docker-machine
 brew services start docker-machine
 
+# Neovim
+brew install neovim
+
 # Install mas (Mac App Store CLI)
 brew install mas
 
