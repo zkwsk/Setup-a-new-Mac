@@ -141,3 +141,6 @@ brew install --cask arc
 # Fonts
 brew tap homebrew/cask-fonts
 brew install --cask font-fira-code
+
+# Nmap
+brew install nmap
