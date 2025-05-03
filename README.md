@@ -8,7 +8,12 @@ Guidelines and scripts to setup a new Mac for web development.
 2. Should not be necessary, but to avoid Mac OS nagging you, make sure Apple ID and Google Accounts are configured in System Preferences.
 3. Give Terminal "Full Disk Access" in "System Preferences" under "Security & Privacy"
 4. Most likely not necessary, but if you run into problems you can turn of Turn off system integrity protection during the install. Remember to enable after.
-5. Install Xcode developer tools separately to avoid having to confirm in the GUI while installing the scripted apps.
+5. Install Xcode developer tools CLI. An easy way to do so is to run a library that relies on it such as git. Make sure to accept the xcode license after:
+
+```
+git -v # If Xcode CLI is not installed it will ask you to do so at this point
+sudo xcodebuild -license accept # Accept Xcode license
+```
 
 ## Run the script
 
