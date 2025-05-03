@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Ask for sudo upfront
+sudo -v 
+
 # Copy over a modified Danish keyboard layout that has dead keys removed for easily typing characters such as ` ´ ^ ~
 cp danish.keylayout /Library/Keyboard\ Layouts
 
@@ -26,9 +29,6 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/too
 # NVM
 brew install nvm
 
-# Install Python
-brew install python
-
 # Setup NVM
 mkdir ~/.nvm
 
@@ -48,6 +48,9 @@ mkdir ~/.nvm
 nvm install stable
 nvm install --lts
 nvm use --lts
+
+# Install Python
+brew install python
 
 # Install PHP
 brew install php
@@ -134,6 +137,7 @@ brew install --cask microsoft-outlook
 brew install --cask libreoffice
 
 # Browsers
+brew install --cask zen-browser
 brew install --cask google-chrome
 brew install --cask firefox
 brew install --cask brave-browser-nightly
@@ -150,5 +154,5 @@ brew install nmap
 # Install Ollama
 brew install ollama
 
-# Xcode
+# Xcode UI app
 mas install 497799835
