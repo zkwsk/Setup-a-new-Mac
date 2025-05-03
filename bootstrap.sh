@@ -147,5 +147,8 @@ brew install --cask font-fira-code
 # Nmap
 brew install nmap
 
+# Install Ollama
+brew install ollama
+
 # Xcode
 mas install 497799835
