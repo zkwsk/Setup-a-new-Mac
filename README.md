@@ -24,10 +24,8 @@ sudo chmod +x bootstrap.sh
 ```
 
 ```
-sudo ./bootstrap.sh
+./bootstrap.sh
 ```
-
-(Sudo is required in order to copy keyboard layouts with sudo privileges)
 
 ## Post-install
 
