@@ -15,6 +15,11 @@ brew update
 # Git
 brew install git
 
+# Configure Git
+git config --global user.name "Zaki Wasik"
+git config --global user.email "zakiwa@gmail.com"
+git config --global push.autoSetupRemote true
+
 # Oh-my-zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
@@ -38,6 +43,12 @@ mkdir ~/.nvm
 ) >>~/.zshrc
 
 . ~/.zshrc
+
+# Install latest "stable" anc "LTS" version of Node via NVM
+nvm install stable
+nvm install --lts
+nvm use --lts
+
 # Install PHP
 brew install php
 
@@ -50,9 +61,6 @@ sudo bash -c '(
     echo "</FilesMatch>";
 ) >>/etc/apache2/httpd.conf'
 sudo apachectl -k graceful
-
-# Install latest "stable" version of Node via NVM
-nvm install stable
 
 # Yarn
 brew install yarn
@@ -118,14 +126,8 @@ mas install 419330170
 # Copy over Moom preferences
 defaults import com.manytricks.Moom Moom.plist
 
-# EasyRes
-mas install 688211836
-
 # Harvest
 mas install 506189836
-
-# Xcode
-mas install 497799835
 
 # Office
 brew install --cask microsoft-outlook
@@ -144,3 +146,6 @@ brew install --cask font-fira-code
 
 # Nmap
 brew install nmap
+
+# Xcode
+mas install 497799835
