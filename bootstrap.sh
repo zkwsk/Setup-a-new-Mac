@@ -42,7 +42,7 @@ mkdir ~/.nvm
     echo "source $(brew --prefix nvm)/nvm.sh"
 ) >>~/.zshrc
 
-. ~/.zshrc
+
 
 # Install latest "stable" anc "LTS" version of Node via NVM
 nvm install stable
@@ -114,14 +114,14 @@ brew services start docker-machine
 # Neovim
 brew install neovim
 
-# Install mas (Mac App Store CLI)
-brew install mas
-
 brew install rust
 brew install go
 
 # Act - run Github Actions locally
 brew install act
+
+# Install mas (Mac App Store CLI)
+brew install mas
 
 # Moom
 mas install 419330170
@@ -156,3 +156,6 @@ brew install ollama
 
 # Xcode UI app
 mas install 497799835
+
+# Switch to Oh-my-zsh
+. ~/.zshrc
