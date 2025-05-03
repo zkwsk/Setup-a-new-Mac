@@ -99,14 +99,15 @@ brew install --cask sourcetree
 brew install --cask spotify
 brew install --cask standard-notes
 brew install --cask tableplus
-brew install --cask virtualbox
 brew install --cask viscosity
 brew install --cask visual-studio-code
 brew install --cask vlc
 brew install --cask zoom
 brew install --cask ngrok
+brew install --cask postman
 brew install --cask altair-graphql-client
 brew install --cask keycastr
+brew install --cask utm
 brew install graphviz
 brew install docker-machine
 brew services start docker-machine
