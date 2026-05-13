@@ -111,6 +111,7 @@ brew install --cask utm
 brew install graphviz
 brew install docker-machine
 brew services start docker-machine
+brew install --cask lm-studio
 
 # Neovim
 brew install neovim
