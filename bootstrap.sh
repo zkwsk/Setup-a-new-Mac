@@ -91,6 +91,7 @@ brew install --cask microsoft-teams
 brew install --cask obs
 brew install --cask oracle-jdk
 brew install --cask postman
+brew install --cask bruno
 brew install --cask private-internet-access
 brew install --cask slack
 brew install --cask discord
@@ -104,7 +105,6 @@ brew install --cask visual-studio-code
 brew install --cask vlc
 brew install --cask zoom
 brew install --cask ngrok
-brew install --cask postman
 brew install --cask altair-graphql-client
 brew install --cask keycastr
 brew install --cask utm
