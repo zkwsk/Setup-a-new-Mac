@@ -1,0 +1,34 @@
+name: Bootstrap Preflight
+
+on:
+  push:
+
+jobs:
+  preflight:
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure Apple Silicon runner
+        run: |
+          arch="$(uname -m)"
+          if [ "$arch" != "arm64" ]; then
+            echo "Expected arm64 runner, got: $arch"
+            exit 1
+          fi
+
+      - name: Ensure Xcode Command Line Tools
+        run: |
+          if ! xcode-select -p >/dev/null 2>&1; then
+            echo "Xcode Command Line Tools are required but not installed."
+            exit 1
+          fi
+          xcode-select -p
+          xcodebuild -version
+
+      - name: Ensure bootstrap.sh is executable
+        run: chmod +x ./bootstrap.sh
+
+      - name: Run bootstrap preflight
+        run: ./bootstrap.sh --preflight-only
