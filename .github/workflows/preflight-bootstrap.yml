@@ -31,4 +31,4 @@ jobs:
         run: chmod +x ./bootstrap.sh
 
       - name: Run bootstrap preflight
-        run: ./bootstrap.sh --preflight-only
+        run: ./bootstrap.sh --preflight-only --no-app-store
