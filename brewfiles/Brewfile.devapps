@@ -1,0 +1,12 @@
+# Core development applications and tools.
+cask "iterm2"
+cask "charles"
+cask "dbeaver-community"
+cask "postman"
+cask "bruno"
+cask "sourcetree"
+cask "tableplus"
+cask "visual-studio-code"
+cask "ngrok"
+cask "altair-graphql-client"
+cask "lm-studio"

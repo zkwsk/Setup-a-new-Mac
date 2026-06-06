@@ -1,0 +1,7 @@
+# Language runtimes and package managers.
+brew "nvm"
+brew "python"
+brew "php"
+brew "yarn"
+brew "deno"
+brew "bun"

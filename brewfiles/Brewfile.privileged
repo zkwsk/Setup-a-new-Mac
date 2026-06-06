@@ -1,0 +1,9 @@
+# Privileged casks that may prompt for admin approval.
+cask "docker"
+cask "oracle-jdk"
+cask "microsoft-teams"
+cask "zoom"
+cask "adobe-creative-cloud"
+cask "private-internet-access"
+cask "nordvpn"
+cask "wifiman"

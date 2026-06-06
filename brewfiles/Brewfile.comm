@@ -1,0 +1,3 @@
+# Communication and collaboration apps.
+cask "slack"
+cask "discord"
