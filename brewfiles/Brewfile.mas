@@ -1,0 +1,4 @@
+# Mac App Store apps (requires App Store sign-in).
+mas "Moom", id: 419330170
+mas "Harvest", id: 506189836
+mas "Xcode", id: 497799835

@@ -1,0 +1,10 @@
+# Core CLI tools for every machine.
+brew "git"
+brew "mas"
+brew "nmap"
+brew "graphviz"
+brew "neovim"
+brew "rust"
+brew "go"
+brew "act"
+brew "ollama"
