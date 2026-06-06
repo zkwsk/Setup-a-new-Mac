@@ -98,6 +98,7 @@ brew install --cask discord
 brew install --cask soundflower soundflowerbed
 brew install --cask sourcetree
 brew install --cask spotify
+brew install --cask tidal
 brew install --cask standard-notes
 brew install --cask tableplus
 brew install --cask viscosity
