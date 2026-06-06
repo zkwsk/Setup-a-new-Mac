@@ -3,6 +3,9 @@ name: Bootstrap Preflight
 on:
   push:
 
+permissions:
+  contents: read
+
 jobs:
   preflight:
     runs-on: macos-14
