@@ -8,6 +8,8 @@ ONLY_PRIVILEGED=0
 STEP_TIMEOUT_SECONDS=600
 RUN_PREFLIGHT=1
 PREFLIGHT_ONLY=0
+RUN_POST_INSTALL=1
+POST_INSTALL_ONLY=0
 FAILED_STEPS=()
 PREFLIGHT_ERRORS=()
 
@@ -48,8 +50,16 @@ for arg in "$@"; do
             WITH_PRIVILEGED=1
             ONLY_PRIVILEGED=1
             ;;
+        --no-post-install)
+            RUN_POST_INSTALL=0
+            POST_INSTALL_ONLY=0
+            ;;
+        --post-install-only)
+            RUN_POST_INSTALL=1
+            POST_INSTALL_ONLY=1
+            ;;
         -h|--help)
-            echo "Usage: ./bootstrap.sh [--with-app-store|--no-app-store] [--with-privileged|--only-privileged] [--step-timeout=SECONDS] [--preflight|--preflight-only|--no-preflight]"
+            echo "Usage: ./bootstrap.sh [--with-app-store|--no-app-store] [--with-privileged|--only-privileged] [--step-timeout=SECONDS] [--preflight|--preflight-only|--no-preflight] [--no-post-install|--post-install-only]"
             echo "  --with-app-store    Include Mac App Store installs from Brewfile.mas (default)"
             echo "  --no-app-store      Skip Mac App Store installs"
             echo "  --with-privileged   Include privileged casks from Brewfile.privileged"
@@ -58,6 +68,8 @@ for arg in "$@"; do
             echo "  --preflight         Validate Brewfile entries before installing (default)"
             echo "  --preflight-only    Run Brewfile validation and exit"
             echo "  --no-preflight      Skip Brewfile validation"
+            echo "  --no-post-install   Skip post-install scripts"
+            echo "  --post-install-only Run only post-install scripts and skip dependency installs"
             exit 0
             ;;
         --step-timeout=*)
@@ -89,6 +101,30 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUNDLE_DIR="$SCRIPT_DIR/brewfiles"
 cd "$SCRIPT_DIR"
+
+if [[ "$POST_INSTALL_ONLY" -eq 1 ]]; then
+    echo "Running only post-install scripts..."
+    if [[ -f "$SCRIPT_DIR/scripts/system-preferences.sh" ]]; then
+        if ! bash "$SCRIPT_DIR/scripts/system-preferences.sh"; then
+            echo "Post-install scripts failed."
+            exit 1
+        fi
+    else
+        echo "Missing post-install script: $SCRIPT_DIR/scripts/system-preferences.sh"
+        exit 1
+    fi
+
+    if [[ -f "$SCRIPT_DIR/scripts/finder-preferences.sh" ]]; then
+        if ! bash "$SCRIPT_DIR/scripts/finder-preferences.sh"; then
+            echo "Post-install scripts failed."
+            exit 1
+        fi
+    else
+        echo "Missing post-install script: $SCRIPT_DIR/scripts/finder-preferences.sh"
+        exit 1
+    fi
+    exit 0
+fi
 
 # Ask for sudo upfront and keep the sudo session alive.
 sudo -v
@@ -350,40 +386,46 @@ ensure_brew_zprofile_block() {
 }
 
 ensure_apache_php_block() {
-    local apache_conf="/etc/apache2/httpd.conf"
-    local php_module_path
-    local temp_file
+    sudo bash <<'EOF'
+set -euo pipefail
 
-    php_module_path="$(brew --prefix php)/lib/httpd/modules/libphp.so"
+apache_conf="/etc/apache2/httpd.conf"
+temp_file="$(mktemp)"
 
-    temp_file="$(mktemp)"
-
-    sudo awk '
+awk '
         BEGIN { in_managed_block = 0 }
         /^# >>> setup-a-new-mac php >>>$/ { in_managed_block = 1; next }
         /^# <<< setup-a-new-mac php <<<$/{ in_managed_block = 0; next }
         in_managed_block { next }
 
-        /^LoadModule php_module / { next }
-        /^<FilesMatch \\.php\$>/ { next }
-        /^    SetHandler application\/x-httpd-php$/ { next }
-        /^<\/FilesMatch>$/ { next }
+        /^[[:space:]]*LoadModule php_module / { next }
+        /^[[:space:]]*#?LoadModule proxy_module libexec\/apache2\/mod_proxy\.so$/ { next }
+        /^[[:space:]]*#?LoadModule proxy_fcgi_module libexec\/apache2\/mod_proxy_fcgi\.so$/ { next }
+        /^[[:space:]]*SetHandler application\/x-httpd-php$/ { next }
+        /^[[:space:]]*SetHandler "proxy:fcgi:\/\/127\.0\.0\.1:9000"$/ { next }
 
         { print }
     ' "$apache_conf" > "$temp_file"
 
-    sudo cp "$temp_file" "$apache_conf"
+cp "$temp_file" "$apache_conf"
     rm -f "$temp_file"
 
-    sudo bash -c "cat >> '$apache_conf' <<EOF
+cat >> "$apache_conf" <<'BLOCK'
 
 # >>> setup-a-new-mac php >>>
-LoadModule php_module $php_module_path
+LoadModule proxy_module libexec/apache2/mod_proxy.so
+LoadModule proxy_fcgi_module libexec/apache2/mod_proxy_fcgi.so
 <FilesMatch \.php$>
-    SetHandler application/x-httpd-php
+    SetHandler "proxy:fcgi://127.0.0.1:9000"
 </FilesMatch>
+<IfModule dir_module>
+    DirectoryIndex index.php index.html
+</IfModule>
 # <<< setup-a-new-mac php <<<
-EOF"
+BLOCK
+
+apachectl -k graceful
+EOF
 }
 
 ensure_nvm_zshrc_block() {
@@ -479,6 +521,39 @@ ensure_docker_ready() {
     echo "Docker is ready."
 }
 
+ensure_nvm_lts_default() {
+    local existing_lts_version=""
+    local target_version=""
+
+    existing_lts_version="$(nvm version 'lts/*' 2>/dev/null || true)"
+    if [[ -n "$existing_lts_version" ]] && [[ "$existing_lts_version" != "N/A" ]]; then
+        echo "Latest Node LTS already installed ($existing_lts_version)."
+    else
+        echo "Installing latest Node LTS via nvm..."
+    fi
+
+    nvm install --lts >/dev/null
+
+    # Prefer the active version that nvm just installed/switched to.
+    target_version="$(nvm current 2>/dev/null || true)"
+    if [[ -z "$target_version" ]] || [[ "$target_version" == "none" ]] || [[ "$target_version" == "system" ]]; then
+        target_version="$(nvm version 'lts/*' 2>/dev/null || true)"
+    fi
+
+    if [[ -z "$target_version" ]] || [[ "$target_version" == "N/A" ]]; then
+        return 1
+    fi
+
+    if [[ -n "$existing_lts_version" ]] && [[ "$existing_lts_version" == "$target_version" ]]; then
+        echo "Using installed Node LTS $target_version as default."
+    else
+        echo "Using Node LTS $target_version as default."
+    fi
+
+    nvm alias default "$target_version"
+    nvm use "$target_version"
+}
+
 if [[ "$RUN_PREFLIGHT" -eq 1 ]]; then
     if ! run_preflight_checks; then
         exit 1
@@ -523,14 +598,12 @@ ensure_nvm_zshrc_block
 if [[ -s "$(brew --prefix nvm)/nvm.sh" ]]; then
     # shellcheck disable=SC1090
     source "$(brew --prefix nvm)/nvm.sh"
-    run_optional "nvm install --lts" nvm install --lts
-    run_optional "nvm alias default lts/*" nvm alias default "lts/*"
-    run_optional "nvm use default" nvm use default
+    run_optional "nvm install/use latest LTS" ensure_nvm_lts_default
 fi
 
 # Configure Apache PHP handler via managed block.
-run_optional "apache PHP configuration" ensure_apache_php_block
-run_optional "apachectl graceful restart" sudo apachectl -k graceful
+run_optional "apache PHP configuration and restart" ensure_apache_php_block
+run_optional "brew services start php" brew services start php
 
 # App Store apps are enabled by default unless explicitly disabled.
 if [[ "$ONLY_PRIVILEGED" -eq 0 ]]; then
@@ -554,6 +627,21 @@ if [[ "$WITH_PRIVILEGED" -eq 1 ]]; then
     done
 else
     echo "Skipping privileged installs. Use --with-privileged to include them."
+fi
+
+# Apply post-install scripts after dependency installation.
+if [[ "$RUN_POST_INSTALL" -eq 1 ]] && [[ -f "$SCRIPT_DIR/scripts/system-preferences.sh" ]]; then
+    run_optional "system preferences automation" bash "$SCRIPT_DIR/scripts/system-preferences.sh"
+elif [[ "$RUN_POST_INSTALL" -eq 1 ]]; then
+    record_failure "missing system preferences script: $SCRIPT_DIR/scripts/system-preferences.sh"
+else
+    echo "Skipping post-install scripts. Use --post-install-only to run just post-install steps."
+fi
+
+if [[ "$RUN_POST_INSTALL" -eq 1 ]] && [[ -f "$SCRIPT_DIR/scripts/finder-preferences.sh" ]]; then
+    run_optional "finder preferences automation" bash "$SCRIPT_DIR/scripts/finder-preferences.sh"
+elif [[ "$RUN_POST_INSTALL" -eq 1 ]]; then
+    record_failure "missing finder preferences script: $SCRIPT_DIR/scripts/finder-preferences.sh"
 fi
 
 if [[ "${#FAILED_STEPS[@]}" -gt 0 ]]; then

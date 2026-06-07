@@ -76,6 +76,18 @@ Skip preflight validation:
 ./bootstrap.sh --no-preflight
 ```
 
+Skip post-install scripts:
+
+```
+./bootstrap.sh --no-post-install
+```
+
+Run only post-install scripts (skip dependency installs):
+
+```
+./bootstrap.sh --post-install-only
+```
+
 Show available options:
 
 ```
@@ -133,8 +145,9 @@ Privileged-only pass (attended, no other installs):
 1. Change keyboard layout to custom layout without dead keys
 2. Sign in to apps that require accounts (for example 1Password, Dropbox, Slack, Teams, Chrome).
 3. Enable VS Code Settings Sync.
-4. The bootstrap starts Docker Desktop and waits for the daemon when possible. If Docker needs first-run approval or login, finish that in the app and rerun the script.
-5. If needed for local PHP dev, add `index.php` to `DirectoryIndex` in `httpd.conf`:
+4. Trackpad speed is now set automatically to 8/10 by `scripts/system-preferences.sh` at the end of bootstrap.
+5. The bootstrap starts Docker Desktop and waits for the daemon when possible. If Docker needs first-run approval or login, finish that in the app and rerun the script.
+6. If needed for local PHP dev, add `index.php` to `DirectoryIndex` in `httpd.conf`:
 
 ```
 <IfModule dir_module>
@@ -144,7 +157,4 @@ Privileged-only pass (attended, no other installs):
 
 ## TODO
 
-- Automate System Preferences settings:
-- Turn off restoring applications after reboot
-- Turn off spell checking
 - Switch to custom keyboard
