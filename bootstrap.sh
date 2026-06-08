@@ -102,8 +102,48 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUNDLE_DIR="$SCRIPT_DIR/brewfiles"
 cd "$SCRIPT_DIR"
 
+ensure_custom_keyboard_layout_selected() {
+    local keylayout_path="$SCRIPT_DIR/danish.keylayout"
+    local destination_path="/Library/Keyboard Layouts/danish.keylayout"
+    local layout_name=""
+    local layout_id=""
+
+    if [[ ! -f "$keylayout_path" ]]; then
+        echo "Missing keyboard layout file: $keylayout_path"
+        return 1
+    fi
+
+    sudo install -m 0644 "$keylayout_path" "$destination_path"
+
+    layout_name="$(awk 'match($0, /name="[^"]+"/) { print substr($0, RSTART + 6, RLENGTH - 7); exit }' "$keylayout_path")"
+    layout_id="$(awk 'match($0, /id="-?[0-9]+"/) { print substr($0, RSTART + 4, RLENGTH - 5); exit }' "$keylayout_path")"
+
+    if [[ -z "$layout_name" ]] || [[ -z "$layout_id" ]]; then
+        return 1
+    fi
+
+    # Rebuild input source preferences so the copied custom layout is registered.
+    defaults write com.apple.HIToolbox AppleEnabledInputSources -array
+    defaults write com.apple.HIToolbox AppleEnabledInputSources -array-add "{ InputSourceKind = \"Keyboard Layout\"; \"KeyboardLayout ID\" = $layout_id; \"KeyboardLayout Name\" = \"$layout_name\"; }"
+
+    defaults write com.apple.HIToolbox AppleSelectedInputSources -array
+    defaults write com.apple.HIToolbox AppleSelectedInputSources -array-add "{ InputSourceKind = \"Keyboard Layout\"; \"KeyboardLayout ID\" = $layout_id; \"KeyboardLayout Name\" = \"$layout_name\"; }"
+
+    # Restart input-related agents so the selected layout is applied immediately.
+    killall cfprefsd >/dev/null 2>&1 || true
+    killall TextInputMenuAgent >/dev/null 2>&1 || true
+    killall SystemUIServer >/dev/null 2>&1 || true
+
+    echo "Selected keyboard layout: $layout_name (id: $layout_id)"
+}
+
 if [[ "$POST_INSTALL_ONLY" -eq 1 ]]; then
     echo "Running only post-install scripts..."
+    if ! ensure_custom_keyboard_layout_selected; then
+        echo "Post-install scripts failed."
+        exit 1
+    fi
+
     if [[ -f "$SCRIPT_DIR/scripts/system-preferences.sh" ]]; then
         if ! bash "$SCRIPT_DIR/scripts/system-preferences.sh"; then
             echo "Post-install scripts failed."
@@ -133,11 +173,6 @@ while true; do
     sleep 60
     kill -0 "$$" || exit
 done 2>/dev/null &
-
-# Copy custom keyboard layout.
-if [[ -f "$SCRIPT_DIR/danish.keylayout" ]]; then
-    sudo install -m 0644 "$SCRIPT_DIR/danish.keylayout" "/Library/Keyboard Layouts/danish.keylayout"
-fi
 
 # Make projects directory.
 mkdir -p "$HOME/projects"
@@ -631,6 +666,7 @@ fi
 
 # Apply post-install scripts after dependency installation.
 if [[ "$RUN_POST_INSTALL" -eq 1 ]] && [[ -f "$SCRIPT_DIR/scripts/system-preferences.sh" ]]; then
+    run_optional "custom keyboard layout automation" ensure_custom_keyboard_layout_selected
     run_optional "system preferences automation" bash "$SCRIPT_DIR/scripts/system-preferences.sh"
 elif [[ "$RUN_POST_INSTALL" -eq 1 ]]; then
     record_failure "missing system preferences script: $SCRIPT_DIR/scripts/system-preferences.sh"
