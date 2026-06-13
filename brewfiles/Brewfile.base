@@ -1,6 +1,7 @@
 # Core CLI tools for every machine.
 brew "git"
 brew "mas"
+brew "tmux"
 brew "nmap"
 brew "graphviz"
 brew "neovim"
