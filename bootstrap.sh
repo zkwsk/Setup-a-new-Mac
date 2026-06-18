@@ -2,8 +2,17 @@
 
 set -euo pipefail
 
+export HOMEBREW_NO_INTERACTIVE=1
+export HOMEBREW_NO_ASK=1
+export NONINTERACTIVE=1
+export HOMEBREW_CASK_OPTS="--no-quarantine"
+# Prevent `brew upgrade` (formulae) from also upgrading auto_updates casks.
+# Cask upgrades are handled separately via the per-cask loop below.
+export HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS=1
+
 WITH_APP_STORE=1
 WITH_PRIVILEGED=0
+WITH_PHP=0
 ONLY_PRIVILEGED=0
 STEP_TIMEOUT_SECONDS=600
 RUN_PREFLIGHT=1
@@ -12,6 +21,8 @@ RUN_POST_INSTALL=1
 POST_INSTALL_ONLY=0
 FAILED_STEPS=()
 PREFLIGHT_ERRORS=()
+GIT_USER_NAME="${GIT_USER_NAME:-}"
+GIT_USER_EMAIL="${GIT_USER_EMAIL:-}"
 
 # Customize Brewfile execution order here.
 BREWFILES_MAIN=(
@@ -50,6 +61,9 @@ for arg in "$@"; do
             WITH_PRIVILEGED=1
             ONLY_PRIVILEGED=1
             ;;
+        --with-php)
+            WITH_PHP=1
+            ;;
         --no-post-install)
             RUN_POST_INSTALL=0
             POST_INSTALL_ONLY=0
@@ -59,17 +73,21 @@ for arg in "$@"; do
             POST_INSTALL_ONLY=1
             ;;
         -h|--help)
-            echo "Usage: ./bootstrap.sh [--with-app-store|--no-app-store] [--with-privileged|--only-privileged] [--step-timeout=SECONDS] [--preflight|--preflight-only|--no-preflight] [--no-post-install|--post-install-only]"
+            echo "Usage: ./bootstrap.sh [--with-app-store|--no-app-store] [--with-privileged|--only-privileged] [--with-php] [--step-timeout=SECONDS] [--preflight|--preflight-only|--no-preflight] [--no-post-install|--post-install-only]"
             echo "  --with-app-store    Include Mac App Store installs from Brewfile.mas (default)"
             echo "  --no-app-store      Skip Mac App Store installs"
             echo "  --with-privileged   Include privileged casks from Brewfile.privileged"
             echo "  --only-privileged   Install only Brewfile.privileged"
+            echo "  --with-php          Configure Apache to use PHP via FastCGI (default: skip)"
             echo "  --step-timeout      Max seconds per step before it is marked failed (0 disables timeout)"
             echo "  --preflight         Validate Brewfile entries before installing (default)"
             echo "  --preflight-only    Run Brewfile validation and exit"
             echo "  --no-preflight      Skip Brewfile validation"
             echo "  --no-post-install   Skip post-install scripts"
             echo "  --post-install-only Run only post-install scripts and skip dependency installs"
+            echo ""
+            echo "  Git config can also be provided as environment variables:"
+            echo "    GIT_USER_NAME='Your Name' GIT_USER_EMAIL='you@example.com' ./bootstrap.sh"
             exit 0
             ;;
         --step-timeout=*)
@@ -101,6 +119,37 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUNDLE_DIR="$SCRIPT_DIR/brewfiles"
 cd "$SCRIPT_DIR"
+
+prompt_git_config() {
+    local current_name="" current_email=""
+
+    if command -v git >/dev/null 2>&1; then
+        current_name="$(git config --global user.name 2>/dev/null || true)"
+        current_email="$(git config --global user.email 2>/dev/null || true)"
+    fi
+
+    if [[ -z "$GIT_USER_NAME" ]]; then
+        if [[ -n "$current_name" ]]; then
+            read -r -p "Git user name [$current_name]: " GIT_USER_NAME
+            GIT_USER_NAME="${GIT_USER_NAME:-$current_name}"
+        else
+            read -r -p "Git user name: " GIT_USER_NAME
+        fi
+    fi
+
+    if [[ -z "$GIT_USER_EMAIL" ]]; then
+        if [[ -n "$current_email" ]]; then
+            read -r -p "Git user email [$current_email]: " GIT_USER_EMAIL
+            GIT_USER_EMAIL="${GIT_USER_EMAIL:-$current_email}"
+        else
+            read -r -p "Git user email: " GIT_USER_EMAIL
+        fi
+    fi
+}
+
+if [[ "$PREFLIGHT_ONLY" -eq 0 ]] && [[ "$POST_INSTALL_ONLY" -eq 0 ]] && [[ -z "${CI:-}" ]]; then
+    prompt_git_config
+fi
 
 ensure_custom_keyboard_layout_selected() {
     local keylayout_path="$SCRIPT_DIR/danish.keylayout"
@@ -173,6 +222,9 @@ while true; do
     sleep 60
     kill -0 "$$" || exit
 done 2>/dev/null &
+
+# Prevent the Mac from sleeping during a potentially long install.
+caffeinate -s -w $$ &
 
 # Make projects directory.
 mkdir -p "$HOME/projects"
@@ -365,7 +417,15 @@ run_bundle() {
         fi
 
         if [[ "$line" =~ ^cask[[:space:]]+\"([^\"]+)\"$ ]]; then
-            run_optional "brew install --cask ${BASH_REMATCH[1]}" brew install --cask "${BASH_REMATCH[1]}"
+            local _cask="${BASH_REMATCH[1]}"
+            if brew list --cask "$_cask" >/dev/null 2>&1; then
+                run_optional "brew install --cask $_cask" brew install --cask "$_cask"
+            else
+                # Not yet managed by brew — use --force so apps already present in
+                # /Applications (installed outside brew) are overwritten rather than
+                # causing a "file already exists" failure.
+                run_optional "brew install --cask $_cask" brew install --cask --force "$_cask"
+            fi
             continue
         fi
 
@@ -376,11 +436,6 @@ run_bundle() {
 
         record_failure "unrecognized Brewfile entry in $brewfile: $line"
     done < "$brewfile_path"
-}
-
-run_bundle_if_exists() {
-    local brewfile="$1"
-    run_bundle "$brewfile"
 }
 
 run_bundle_if_app_store_enabled() {
@@ -396,36 +451,10 @@ ensure_brew_zprofile_block() {
     local zprofile_path="$HOME/.zprofile"
     local temp_file
     local brew_shellenv_line
-    local start_marker="# >>> setup-a-new-mac brew shellenv >>>"
-    local end_marker="# <<< setup-a-new-mac brew shellenv <<<"
-    local expected_block
 
     brew_shellenv_line="eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
-    expected_block="$start_marker
-$brew_shellenv_line
-$end_marker"
 
     touch "$zprofile_path"
-
-    if awk -v expected="$expected_block" '
-        BEGIN { in_managed_block = 0; block = "" }
-        /^# >>> setup-a-new-mac brew shellenv >>>$/ { in_managed_block = 1; block = $0; next }
-        /^# <<< setup-a-new-mac brew shellenv <<<$/{
-            if (in_managed_block) {
-                block = block "\n" $0
-                if (block == expected) {
-                    found = 1
-                }
-            }
-            in_managed_block = 0
-            block = ""
-            next
-        }
-        in_managed_block { block = block "\n" $0 }
-        END { exit(found ? 0 : 1) }
-    ' "$zprofile_path"; then
-        return
-    fi
 
     temp_file="$(mktemp)"
 
@@ -498,6 +527,7 @@ ensure_nvm_zshrc_block() {
 
     nvm_prefix="$(brew --prefix nvm)"
     touch "$zshrc_path"
+
     temp_file="$(mktemp)"
 
     # Remove older unmanaged NVM lines and any previously managed block.
@@ -627,22 +657,39 @@ if [[ "$RUN_PREFLIGHT" -eq 1 ]]; then
     fi
 fi
 
+# Install the custom keyboard layout now, while the sudo session from the
+# keepalive above is still fresh. Running it here avoids a second password
+# prompt at the end of a long install session.
+if [[ "$RUN_POST_INSTALL" -eq 1 ]]; then
+    run_optional "custom keyboard layout" ensure_custom_keyboard_layout_selected
+fi
+
 # Install non-App-Store packages.
 if [[ "$ONLY_PRIVILEGED" -eq 0 ]]; then
     for brewfile in "${BREWFILES_MAIN[@]}"; do
-        run_bundle_if_exists "$brewfile"
+        run_bundle "$brewfile"
 
         if [[ -n "$DOCKER_READY_AFTER_BREWFILE" ]] && [[ "$brewfile" == "$DOCKER_READY_AFTER_BREWFILE" ]]; then
             run_optional "ensure Docker is ready" ensure_docker_ready
         fi
     done
+
+    run_optional "brew upgrade" brew upgrade
+    while IFS= read -r _outdated_cask; do
+        [[ -z "$_outdated_cask" ]] && continue
+        run_optional "brew upgrade --cask $_outdated_cask" brew upgrade --cask "$_outdated_cask"
+    done < <(brew outdated --cask --quiet 2>/dev/null || true)
 else
     echo "Skipping main brewfiles because --only-privileged was provided."
 fi
 
 # Configure Git.
-git config --global user.name "Zaki Wasik"
-git config --global user.email "zakiwa@gmail.com"
+if [[ -n "$GIT_USER_NAME" ]]; then
+    git config --global user.name "$GIT_USER_NAME"
+fi
+if [[ -n "$GIT_USER_EMAIL" ]]; then
+    git config --global user.email "$GIT_USER_EMAIL"
+fi
 git config --global push.autoSetupRemote true
 
 # Install oh-my-zsh if missing.
@@ -665,8 +712,10 @@ if [[ -s "$(brew --prefix nvm)/nvm.sh" ]]; then
 fi
 
 # Configure Apache PHP handler via managed block.
-run_optional "apache PHP configuration and restart" ensure_apache_php_block
-run_optional "brew services start php" brew services start php
+if [[ "$WITH_PHP" -eq 1 ]]; then
+    run_optional "apache PHP configuration and restart" ensure_apache_php_block
+    run_optional "brew services start php" brew services start php
+fi
 
 # App Store apps are enabled by default unless explicitly disabled.
 if [[ "$ONLY_PRIVILEGED" -eq 0 ]]; then
@@ -686,7 +735,7 @@ fi
 
 if [[ "$WITH_PRIVILEGED" -eq 1 ]]; then
     for brewfile in "${BREWFILES_PRIVILEGED[@]}"; do
-        run_bundle_if_exists "$brewfile"
+        run_bundle "$brewfile"
     done
 else
     echo "Skipping privileged installs. Use --with-privileged to include them."
@@ -694,7 +743,6 @@ fi
 
 # Apply post-install scripts after dependency installation.
 if [[ "$RUN_POST_INSTALL" -eq 1 ]] && [[ -f "$SCRIPT_DIR/scripts/system-preferences.sh" ]]; then
-    run_optional "custom keyboard layout automation" ensure_custom_keyboard_layout_selected
     run_optional "system preferences automation" bash "$SCRIPT_DIR/scripts/system-preferences.sh"
 elif [[ "$RUN_POST_INSTALL" -eq 1 ]]; then
     record_failure "missing system preferences script: $SCRIPT_DIR/scripts/system-preferences.sh"

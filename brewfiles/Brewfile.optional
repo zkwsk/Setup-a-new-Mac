@@ -1,9 +1,7 @@
 # Personal and optional apps.
 cask "1password"
-cask "adobe-creative-cloud"
 cask "alfred"
 cask "cyberduck"
-cask "dropbox"
 cask "evernote"
 cask "notion"
 cask "standard-notes"

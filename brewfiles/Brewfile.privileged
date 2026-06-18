@@ -1,5 +1,6 @@
 # Privileged casks that may prompt for admin approval.
 cask "docker"
+cask "dropbox"
 cask "oracle-jdk"
 cask "microsoft-teams"
 cask "zoom"
