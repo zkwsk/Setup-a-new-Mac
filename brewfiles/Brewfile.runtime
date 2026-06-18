@@ -1,7 +1,9 @@
 # Language runtimes and package managers.
+tap "oven-sh/bun"
+
 brew "nvm"
 brew "python"
 brew "php"
 brew "yarn"
 brew "deno"
-brew "bun"
+brew "oven-sh/bun/bun"

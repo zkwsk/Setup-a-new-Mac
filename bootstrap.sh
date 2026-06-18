@@ -395,8 +395,38 @@ run_bundle_if_app_store_enabled() {
 ensure_brew_zprofile_block() {
     local zprofile_path="$HOME/.zprofile"
     local temp_file
+    local brew_shellenv_line
+    local start_marker="# >>> setup-a-new-mac brew shellenv >>>"
+    local end_marker="# <<< setup-a-new-mac brew shellenv <<<"
+    local expected_block
+
+    brew_shellenv_line="eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+    expected_block="$start_marker
+$brew_shellenv_line
+$end_marker"
 
     touch "$zprofile_path"
+
+    if awk -v expected="$expected_block" '
+        BEGIN { in_managed_block = 0; block = "" }
+        /^# >>> setup-a-new-mac brew shellenv >>>$/ { in_managed_block = 1; block = $0; next }
+        /^# <<< setup-a-new-mac brew shellenv <<<$/{
+            if (in_managed_block) {
+                block = block "\n" $0
+                if (block == expected) {
+                    found = 1
+                }
+            }
+            in_managed_block = 0
+            block = ""
+            next
+        }
+        in_managed_block { block = block "\n" $0 }
+        END { exit(found ? 0 : 1) }
+    ' "$zprofile_path"; then
+        return
+    fi
+
     temp_file="$(mktemp)"
 
     awk '
@@ -404,8 +434,6 @@ ensure_brew_zprofile_block() {
         /^# >>> setup-a-new-mac brew shellenv >>>$/ { in_managed_block = 1; next }
         /^# <<< setup-a-new-mac brew shellenv <<<$/{ in_managed_block = 0; next }
         in_managed_block { next }
-
-        /^eval "\$\([^)]*brew shellenv\)"$/ { next }
 
         { print }
     ' "$zprofile_path" > "$temp_file"
@@ -415,7 +443,7 @@ ensure_brew_zprofile_block() {
     {
         echo ""
         echo "# >>> setup-a-new-mac brew shellenv >>>"
-        echo "eval \"$($BREW_PREFIX/bin/brew shellenv)\""
+        echo "$brew_shellenv_line"
         echo "# <<< setup-a-new-mac brew shellenv <<<"
     } >> "$zprofile_path"
 }
