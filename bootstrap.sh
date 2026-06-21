@@ -647,6 +647,14 @@ ensure_nvm_lts_default() {
     nvm use "$target_version"
 }
 
+ensure_corepack_enabled() {
+    if ! command -v corepack >/dev/null 2>&1; then
+        return 1
+    fi
+
+    corepack enable
+}
+
 if [[ "$RUN_PREFLIGHT" -eq 1 ]]; then
     if ! run_preflight_checks; then
         exit 1
@@ -709,6 +717,7 @@ if [[ -s "$(brew --prefix nvm)/nvm.sh" ]]; then
     # shellcheck disable=SC1090
     source "$(brew --prefix nvm)/nvm.sh"
     run_optional "nvm install/use latest LTS" ensure_nvm_lts_default
+    run_optional "corepack enable" ensure_corepack_enabled
 fi
 
 # Configure Apache PHP handler via managed block.
