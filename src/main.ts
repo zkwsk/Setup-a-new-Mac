@@ -30,7 +30,9 @@ const buildSections = (
 ): { sections: readonly TreeSection[]; initial: ReadonlySet<string> } => {
   const checked = [
     ...groups.flatMap((group) =>
-      group.entries.filter((entry) => isEntryChecked(state, group, entry)).map((e) => e.key),
+      group.entries
+        .filter((entry) => isEntryChecked(state, group, entry, installed))
+        .map((e) => e.key),
     ),
     ...steps.filter((step) => isStepChecked(state, step)).map((step) => `step:${step.id}`),
   ];
@@ -189,7 +191,14 @@ const main = async () => {
 
   let current = recordDeselections(
     state,
-    deselectionsFrom(state, groups, steps, selected, new Set(selectedSteps.map((s) => s.id))),
+    deselectionsFrom(
+      state,
+      groups,
+      steps,
+      selected,
+      new Set(selectedSteps.map((s) => s.id)),
+      installed,
+    ),
   );
   await saveState(STATE_FILE, current);
 

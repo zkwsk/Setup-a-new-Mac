@@ -38,19 +38,23 @@ There are no `--with-x` flags. Everything that used to be a flag is a checkbox.
 
 ```
 ? Select what to install (↑↓ move · space toggle · a all/none · enter confirm)
-❯ ◉ Packages
-    ◉ base — Core CLI tools for every machine. (11)
-      ◉ git (installed)
-      ◉ ollama
+❯ ◍ Packages
+    ◯ base — Core CLI tools for every machine. (11)
+      ◯ git (installed)
+      ◯ ollama (installed)
     ◍ optional — Personal and optional apps. (18)
-    ◯ privileged — Privileged casks... (needs attention) (9)
+      ◯ 1password (installed)
+      ◉ cyberduck
+    ◉ privileged — Privileged casks... (needs attention) (9)
   ◍ Post-install steps
       ◉ Git identity and push defaults
       ◯ Custom keyboard layout (done 2026-09-06)
 ```
 
 Pressing space on a group row toggles everything in that Brewfile. `◍` means a
-group is partly selected.
+group is partly selected. Anything already installed or already done starts
+unchecked, so on a machine that is mostly set up the wizard opens showing only
+what is left — check a box to reinstall or re-run it anyway.
 
 ## Adding things
 
@@ -92,17 +96,33 @@ export default defineStep({
 
 ## What persists between runs
 
-`.bootstrap-state.json` (gitignored) records two things:
+A checkbox is on by default unless there is a reason for it not to be, and there
+are two different reasons.
 
-- **Packages you unchecked.** These stay unchecked. Uncheck the multimedia apps
-  on a work machine and they will not creep back. Anything *added* to a Brewfile
-  later is unknown to the file and therefore checked — so new entries still
-  install.
-- **Steps that succeeded.** These are unchecked next time, shown as
-  `(done <date>)`. A step that failed or never ran comes back checked, so a
-  re-run naturally resumes what is unfinished.
+**Already done.** Packages that are installed start unchecked and are marked
+`(installed)`; steps that have succeeded start unchecked and are marked
+`(done <date>)`. So a second run opens as a to-do list of what is left rather
+than a list of everything. A step that *failed* comes back checked, so a re-run
+resumes what is unfinished. Installed state is read live from `brew list`,
+`brew tap` and `mas list` — it is not remembered.
 
-Delete the file to start from defaults again.
+**Not wanted.** Anything you actively uncheck is recorded in
+`.bootstrap-state.json` (gitignored) and stays unchecked on later runs. Uncheck
+the multimedia apps on a work machine and they will not creep back.
+
+The two are kept apart deliberately: unchecking a box that was only unchecked
+because the package is installed is not an opt-out, so it is not recorded.
+
+Unchecking an entire group is read as "not this category" and *also* suppresses
+entries added to that Brewfile later — which is the point of it. Because that is
+a strong reading, it is only inferred when the whole group was on offer and all
+of it was rejected. A group that is mostly installed with one item unchecked
+records that one item instead.
+
+Anything added to a Brewfile after your last run is unknown to the state file
+and therefore checked, so new entries always install.
+
+Delete `.bootstrap-state.json` to start from defaults again.
 
 ## Logs
 

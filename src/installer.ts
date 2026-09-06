@@ -63,11 +63,18 @@ const installers: Record<EntryType, Installer> = {
 export const installEntry = (entry: Entry, installed: ReadonlySet<string>): Promise<Failure | null> =>
   installers[entry.type](entry, installed);
 
-/** Formula and cask keys brew already knows about, for `(installed)` marks. */
+/**
+ * Everything already present, keyed the same way Brewfile entries are. Drives
+ * both the `(installed)` marks and the default-unchecked rule, so it has to
+ * cover all four entry types — a type missing from here would stay checked
+ * forever and be reinstalled on every run.
+ */
 export const installedPackages = async (): Promise<ReadonlySet<string>> => {
-  const [formulae, casks] = await Promise.all([
+  const [formulae, casks, taps, apps] = await Promise.all([
     $({ nothrow: true })`brew list --formula -1`,
     $({ nothrow: true })`brew list --cask -1`,
+    $({ nothrow: true })`brew tap`,
+    $({ nothrow: true })`mas list`,
   ]);
 
   const lines = (out: string) =>
@@ -79,6 +86,12 @@ export const installedPackages = async (): Promise<ReadonlySet<string>> => {
   return new Set([
     ...lines(formulae.stdout).map((name) => `brew:${name}`),
     ...lines(casks.stdout).map((name) => `cask:${name}`),
+    ...lines(taps.stdout).map((name) => `tap:${name}`),
+    // `mas list` prints "419330170  Moom  (3.2.19)"; the id is the key.
+    ...lines(apps.stdout).flatMap((line) => {
+      const id = /^(\d+)/.exec(line)?.[1];
+      return id ? [`mas:${id}`] : [];
+    }),
   ]);
 };
 

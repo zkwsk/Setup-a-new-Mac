@@ -28,18 +28,27 @@ const step = (id: string): Step => ({
 
 const withState = (patch: Partial<State>): State => ({ ...emptyState, ...patch });
 
-describe('package defaults — deselections are sticky', () => {
+const none: ReadonlySet<string> = new Set();
+
+describe('package defaults — installed or deselected means unchecked', () => {
   const media = group('Brewfile.media', ['cask:vlc', 'cask:obs']);
 
   it('checks everything on a first run', () => {
-    assert.equal(isEntryChecked(emptyState, media, entry('cask:vlc')), true);
+    assert.equal(isEntryChecked(emptyState, media, entry('cask:vlc'), none), true);
+  });
+
+  it('unchecks anything already installed', () => {
+    const installed = new Set(['cask:vlc']);
+
+    assert.equal(isEntryChecked(emptyState, media, entry('cask:vlc'), installed), false);
+    assert.equal(isEntryChecked(emptyState, media, entry('cask:obs'), installed), true);
   });
 
   it('leaves an explicitly deselected entry unchecked', () => {
     const state = withState({ deselected: { groups: [], entries: ['cask:vlc'], steps: [] } });
 
-    assert.equal(isEntryChecked(state, media, entry('cask:vlc')), false);
-    assert.equal(isEntryChecked(state, media, entry('cask:obs')), true);
+    assert.equal(isEntryChecked(state, media, entry('cask:vlc'), none), false);
+    assert.equal(isEntryChecked(state, media, entry('cask:obs'), none), true);
   });
 
   it('leaves every entry of a deselected group unchecked', () => {
@@ -47,8 +56,13 @@ describe('package defaults — deselections are sticky', () => {
       deselected: { groups: ['Brewfile.media'], entries: [], steps: [] },
     });
 
-    assert.equal(isEntryChecked(state, media, entry('cask:vlc')), false);
-    assert.equal(isEntryChecked(state, media, entry('cask:obs')), false);
+    assert.equal(isEntryChecked(state, media, entry('cask:vlc'), none), false);
+    assert.equal(isEntryChecked(state, media, entry('cask:obs'), none), false);
+  });
+
+  it('re-checks a deselected entry once it is uninstalled again', () => {
+    const state = withState({ deselected: { groups: [], entries: ['cask:vlc'], steps: [] } });
+    assert.equal(isEntryChecked(state, media, entry('cask:vlc'), none), false);
   });
 
   it('checks an entry added to a Brewfile after the last run', () => {
@@ -57,7 +71,7 @@ describe('package defaults — deselections are sticky', () => {
     const state = withState({ deselected: { groups: [], entries: ['cask:vlc'], steps: [] } });
     const grown = group('Brewfile.media', ['cask:vlc', 'cask:obs', 'cask:raycast']);
 
-    assert.equal(isEntryChecked(state, grown, entry('cask:raycast')), true);
+    assert.equal(isEntryChecked(state, grown, entry('cask:raycast'), none), true);
   });
 });
 
@@ -88,6 +102,7 @@ describe('deselectionsFrom', () => {
     group('Brewfile.media', ['cask:vlc', 'cask:obs']),
   ];
   const steps = [step('dock'), step('finder')];
+  const allSteps = new Set(['dock', 'finder']);
 
   it('records a fully unchecked group as a group, not as its entries', () => {
     const result = deselectionsFrom(
@@ -95,7 +110,8 @@ describe('deselectionsFrom', () => {
       groups,
       steps,
       new Set(['brew:git', 'brew:tmux']),
-      new Set(['dock', 'finder']),
+      allSteps,
+      none,
     );
 
     assert.deepEqual(result.groups, ['Brewfile.media']);
@@ -108,23 +124,101 @@ describe('deselectionsFrom', () => {
       groups,
       steps,
       new Set(['brew:git', 'cask:vlc']),
-      new Set(['dock', 'finder']),
+      allSteps,
+      none,
     );
 
     assert.deepEqual(result.groups, []);
     assert.deepEqual(result.entries, ['brew:tmux', 'cask:obs']);
   });
 
+  it('does not mistake an installed package for a deliberate opt-out', () => {
+    // Everything installed, so nothing is checked — but the user opted out of
+    // nothing. Recording these would permanently deselect the whole machine.
+    const installed = new Set(['brew:git', 'brew:tmux', 'cask:vlc', 'cask:obs']);
+    const result = deselectionsFrom(emptyState, groups, steps, new Set(), allSteps, installed);
+
+    assert.deepEqual(result.groups, []);
+    assert.deepEqual(result.entries, []);
+  });
+
+  it('records only the uninstalled entries the user actually unchecked', () => {
+    // media is half installed, so unchecking its one remaining cask is not
+    // enough evidence to opt out of the whole category.
+    const installed = new Set(['brew:git', 'cask:vlc']);
+    const result = deselectionsFrom(emptyState, groups, steps, new Set(['brew:tmux']), allSteps, installed);
+
+    assert.deepEqual(result.groups, []);
+    assert.deepEqual(result.entries, ['cask:obs']);
+  });
+
+  it('keeps a recorded group opt-out after one of its packages is installed by hand', () => {
+    const state = withState({
+      deselected: { groups: ['Brewfile.media'], entries: [], steps: [] },
+    });
+    const result = deselectionsFrom(
+      state,
+      groups,
+      steps,
+      new Set(['brew:git', 'brew:tmux']),
+      allSteps,
+      new Set(['cask:vlc']),
+    );
+
+    assert.deepEqual(result.groups, ['Brewfile.media']);
+  });
+
+  it('drops a group opt-out once something in that group is checked again', () => {
+    const state = withState({
+      deselected: { groups: ['Brewfile.media'], entries: [], steps: [] },
+    });
+    const result = deselectionsFrom(
+      state,
+      groups,
+      steps,
+      new Set(['brew:git', 'brew:tmux', 'cask:obs']),
+      allSteps,
+      none,
+    );
+
+    assert.deepEqual(result.groups, []);
+  });
+
+  it('does not record a group whose only unchecked entries are installed', () => {
+    const installed = new Set(['cask:vlc']);
+    const result = deselectionsFrom(emptyState, groups, steps, new Set(['brew:git', 'brew:tmux', 'cask:obs']), allSteps, installed);
+
+    assert.deepEqual(result.groups, []);
+    assert.deepEqual(result.entries, []);
+  });
+
+  it('carries forward a deselection for an entry that is now installed', () => {
+    // Unchecked-because-installed is indistinguishable from unchecked-because-
+    // unwanted, so the recorded preference must survive rather than be dropped
+    // and silently reappear if the package is later removed.
+    const state = withState({ deselected: { groups: [], entries: ['cask:vlc'], steps: [] } });
+    const result = deselectionsFrom(
+      state,
+      groups,
+      steps,
+      new Set(['brew:git', 'brew:tmux', 'cask:obs']),
+      allSteps,
+      new Set(['cask:vlc']),
+    );
+
+    assert.deepEqual(result.entries, ['cask:vlc']);
+  });
+
   it('does not record a step that is unchecked merely because it succeeded', () => {
     // Otherwise every completed step would pile up in the state file.
     const state = withState({ steps: { dock: { status: 'ok', at: '2026-09-06T10:00:00Z' } } });
-    const result = deselectionsFrom(state, groups, steps, new Set(), new Set(['finder']));
+    const result = deselectionsFrom(state, groups, steps, new Set(), new Set(['finder']), none);
 
     assert.deepEqual(result.steps, []);
   });
 
   it('records a step the user actively unchecked', () => {
-    const result = deselectionsFrom(emptyState, groups, steps, new Set(), new Set(['finder']));
+    const result = deselectionsFrom(emptyState, groups, steps, new Set(), new Set(['finder']), none);
     assert.deepEqual(result.steps, ['dock']);
   });
 });
