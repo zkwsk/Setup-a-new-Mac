@@ -41,6 +41,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Unit tests
+        run: npm test
+
       - name: Run bootstrap preflight
         # CI is set, so this installs no sudoers rule and draws no wizard.
         run: ./bootstrap.sh --preflight-only

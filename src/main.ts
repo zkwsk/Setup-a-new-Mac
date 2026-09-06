@@ -10,6 +10,7 @@ import {
   type Group,
 } from './brewfiles.ts';
 import { installEntry, installedPackages, preflight, type Failure } from './installer.ts';
+import { createRunLog, entry as logEntry } from './log.ts';
 import { tree, type TreeSection } from './prompts/tree.ts';
 import { deselectionsFrom, isEntryChecked, isStepChecked } from './selection.ts';
 import { loadState, recordDeselections, recordStep, saveState, type State } from './state.ts';
@@ -180,6 +181,12 @@ const main = async () => {
 
   const context: StepContext = { ...baseContext, git };
   const failures: Failure[] = [];
+
+  const log = await createRunLog(path.join(repoRoot, 'logs'));
+  await log.line(
+    `selection: ${selectedEntries.length} packages, ${selectedSteps.length} post-install steps\n`,
+  );
+
   let current = recordDeselections(
     state,
     deselectionsFrom(state, groups, steps, selected, new Set(selectedSteps.map((s) => s.id))),
@@ -190,9 +197,12 @@ const main = async () => {
     try {
       await step.run(context);
       current = recordStep(current, step.id, 'ok');
+      await log.line(logEntry('STEP OK', step.name));
     } catch (error) {
-      failures.push({ what: step.name, detail: String(error).split('\n')[0] ?? '', manual: false });
+      const detail = String(error).split('\n')[0] ?? '';
+      failures.push({ what: step.name, detail, manual: false });
       current = recordStep(current, step.id, 'failed');
+      await log.line(logEntry('STEP FAIL', step.name, detail));
     }
     await saveState(STATE_FILE, current);
   };
@@ -214,13 +224,23 @@ const main = async () => {
     issues.forEach((issue) => console.warn(chalk.yellow(`  ! ${issue}`)));
 
     heading(`Installing ${selectedEntries.length} packages`);
-    for (const [index, entry] of selectedEntries.entries()) {
-      const label = `[${index + 1}/${selectedEntries.length}] ${entry.type} ${entry.name}`;
-      process.stdout.write(`  ${label} ... `);
+    for (const [index, item] of selectedEntries.entries()) {
+      const what = `${item.type} ${item.name}`;
+      process.stdout.write(`  [${index + 1}/${selectedEntries.length}] ${what} ... `);
 
-      const failed = await installEntry(entry, installed);
-      console.log(failed ? chalk.red('failed') : chalk.green('ok'));
+      const already = installed.has(item.key);
+      const failed = await installEntry(item, installed);
+
+      console.log(
+        failed ? chalk.red('failed') : already ? chalk.dim('already present') : chalk.green('ok'),
+      );
       if (failed) failures.push(failed);
+
+      await log.line(
+        failed
+          ? logEntry(failed.manual ? 'MANUAL' : 'FAILED', what, failed.detail)
+          : logEntry(already ? 'ALREADY' : 'INSTALLED', what),
+      );
     }
   }
 
@@ -244,6 +264,15 @@ const main = async () => {
 
   if (broken.length === 0) console.log(chalk.green('  ✓ everything selected completed'));
   if (broken.length > 0) process.exitCode = 1;
+
+  await log.line(
+    `\nsummary: ${selectedEntries.length - failures.length} ok, ${broken.length} failed, ` +
+      `${manual.length} need manual action`,
+  );
+  for (const group of attended) {
+    await log.line(logEntry('ATTENTION', group.name, group.attended ?? ''));
+  }
+  console.log(chalk.dim(`\n  log: ${path.relative(repoRoot, log.file)}`));
 };
 
 await main();

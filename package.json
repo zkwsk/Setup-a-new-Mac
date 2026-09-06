@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Wizard-driven provisioning for a fresh Mac",
   "scripts": {
+    "test": "node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

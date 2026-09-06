@@ -104,6 +104,30 @@ export default defineStep({
 
 Delete the file to start from defaults again.
 
+## Logs
+
+Every run writes `logs/<timestamp>.log` (gitignored), a line at a time, so an
+interrupted run still leaves a complete record of how far it got.
+
+```
+setup-a-new-mac run 2026-09-06T15:57:51.208Z
+selection: 4 packages, 2 post-install steps
+
+INSTALLED  brew git
+ALREADY    cask iterm2
+FAILED     cask nordvpn — Error: download failed
+MANUAL     Moom (App Store) — not in this Apple ID's purchase history
+STEP OK    Dock on the left, auto-hide, pinned apps
+STEP FAIL  Finder: list view — Error: PlistBuddy exit 1
+
+summary: 2 ok, 2 failed, 1 need manual action
+ATTENTION  privileged — Approve the network extension in System Settings.
+```
+
+`ALREADY` means brew reported the package as present before the run started, so
+nothing was downloaded. `MANUAL` is separated from `FAILED` because it needs you
+rather than a retry.
+
 ## Sudo
 
 You are asked for your password once. The script then writes a NOPASSWD rule to
@@ -155,9 +179,15 @@ of the run continues.
 ```
 npm ci
 npm run typecheck
+npm test
 ./bootstrap.sh --dry-run
 ```
 
 `src/` is TypeScript, run directly by Node via type stripping — there is no build
 step. `bootstrap.sh` is a thin stage-0 that installs the Command Line Tools,
 Homebrew, and Node, and owns the sudo lifecycle; everything else lives in `src/`.
+
+Tests use Node's built-in runner — no test framework dependency — and cover the
+pure logic: Brewfile parsing and ordering, the default-selection rules, managed
+block editing, state persistence, and the run log. Anything that shells out is
+deliberately left to `--dry-run` and `--preflight-only` instead of being mocked.

@@ -1,11 +1,7 @@
 import { defineStep } from './index.ts';
 
-/**
- * macOS scales tracking speed 0.0-3.0. The bash original set 2 while its own
- * comment and the README both claimed "8/10" (which would be 2.4); 2 is the
- * value that has actually been in use, so it is preserved here.
- */
-const SPEED = 2;
+/** macOS scales tracking speed 0.0-3.0, so "8 out of 10" lands on 2.4. */
+const SPEED = 2.4;
 
 const DOMAINS = [
   ['-g', 'com.apple.trackpad.scaling'],

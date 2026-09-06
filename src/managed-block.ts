@@ -34,9 +34,11 @@ export const applyManagedBlock = (
   const before = keep(found ? lines.slice(0, start) : lines);
   const after = found ? keep(lines.slice(end + 1)) : [];
 
-  const next = found
-    ? [...before, ...block, ...after]
-    : [...before, ...(before.at(-1)?.trim() === '' ? [] : ['']), ...block, ''];
+  // One blank line before an appended block, but never a leading one — on a
+  // fresh Mac these files do not exist yet.
+  const separator = before.length > 0 && before.at(-1)?.trim() !== '' ? [''] : [];
+
+  const next = found ? [...before, ...block, ...after] : [...before, ...separator, ...block, ''];
 
   return next.join('\n');
 };

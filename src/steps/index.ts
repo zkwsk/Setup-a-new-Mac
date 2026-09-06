@@ -36,7 +36,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
  */
 export const discoverSteps = async (): Promise<readonly Step[]> => {
   const files = (await readdir(here))
-    .filter((name) => name !== 'index.ts' && name.endsWith('.ts'))
+    .filter((name) => name !== 'index.ts' && name.endsWith('.ts') && !name.endsWith('.test.ts'))
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   const loaded = await Promise.all(
