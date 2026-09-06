@@ -2,5 +2,7 @@
 brew "ollama"
 brew "pi-coding-agent"
 cask "lm-studio"
+cask "claude"
 cask "claude-code"
+cask "chatgpt"
 cask "codex"

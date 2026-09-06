@@ -1,6 +1,7 @@
 # Development applications, runtimes and package managers.
 brew "nvm"
 brew "bun"
+brew "deno"
 brew "python"
 brew "php"
 cask "oracle-jdk"
