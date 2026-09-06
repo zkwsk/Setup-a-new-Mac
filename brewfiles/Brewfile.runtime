@@ -1,8 +1,0 @@
-# Language runtimes and package managers.
-tap "oven-sh/bun"
-
-brew "nvm"
-brew "python"
-brew "php"
-brew "deno"
-brew "oven-sh/bun/bun"

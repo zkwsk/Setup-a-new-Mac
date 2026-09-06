@@ -12,7 +12,8 @@ If you like the setup, fork it and drop in your own Brewfiles.
 ## Preconditions
 
 1. Check out this repository (or download it as a zip).
-2. Sign in to the Mac App Store, if you want the `Brewfile.mas` apps.
+2. Sign in to the Mac App Store, if you want the App Store apps (Xcode, Pages,
+   Numbers, Harvest, Moom).
 
 Xcode Command Line Tools, Homebrew, and Node are installed by the script — you do
 not need to install them first.
@@ -39,13 +40,13 @@ There are no `--with-x` flags. Everything that used to be a flag is a checkbox.
 ```
 ? Select what to install (↑↓ move · space toggle · a all/none · enter confirm)
 ❯ ◍ Packages
-    ◯ base — Core CLI tools for every machine. (11)
+    ◯ base — Core CLI tools for every machine. (8)
       ◯ git (installed)
-      ◯ ollama (installed)
-    ◍ optional — Personal and optional apps. (18)
+      ◯ neovim (installed)
+    ◍ utilities — Desktop helpers and everyday utilities. (8)
       ◯ 1password (installed)
       ◉ cyberduck
-    ◉ privileged — Privileged casks... (needs attention) (9)
+    ◉ network — VPN and tunnel clients. (needs attention) (3)
   ◍ Post-install steps
       ◉ Git identity and push defaults
       ◯ Custom keyboard layout (done 2026-09-06)
@@ -70,8 +71,8 @@ brew "ollama"
 Both directives are optional; without `@name` the label comes from the filename,
 and without `@description` it comes from the first comment line. Add
 `# @attended <text>` to sort a group last and put `<text>` in the closing punch
-list — that is how `Brewfile.privileged` is handled without the code knowing its
-name.
+list — that is how `Brewfile.network` and `Brewfile.design` are handled without
+the code knowing their names.
 
 Prefix filenames with `10-`, `20-` … if you want to control install order.
 
@@ -135,13 +136,13 @@ selection: 4 packages, 2 post-install steps
 
 INSTALLED  brew git
 ALREADY    cask iterm2
-FAILED     cask nordvpn — Error: download failed
+FAILED     cask viscosity — Error: download failed
 MANUAL     Moom (App Store) — not in this Apple ID's purchase history
 STEP OK    Dock on the left, auto-hide, pinned apps
 STEP FAIL  Finder: list view — Error: PlistBuddy exit 1
 
 summary: 2 ok, 2 failed, 1 need manual action
-ATTENTION  privileged — Approve the network extension in System Settings.
+ATTENTION  network — Approve the VPN system extensions in System Settings.
 ```
 
 `ALREADY` means brew reported the package as present before the run started, so
@@ -172,7 +173,7 @@ sudo rm -f /etc/sudoers.d/99-setup-a-new-mac
 A sudoers rule cannot suppress macOS's own authorization UI. Expect to approve
 these yourself, mostly at first launch rather than at install:
 
-- Network system extensions for NordVPN and Private Internet Access, in System Settings
+- The Private Internet Access network system extension, in System Settings
 - Adobe Creative Cloud's own installer
 - Xcode Command Line Tools (a dialog at the very start)
 
@@ -185,9 +186,9 @@ the account. If your selection includes App Store apps, the wizard opens the App
 Store and waits for you before the unattended phase begins.
 
 `mas` can re-download apps your Apple ID already owns and acquire free ones, but
-it cannot buy a paid app. `Brewfile.mas` lists Moom, which is paid — if your
-Apple ID does not own it, that entry fails, lands in the punch list, and the rest
-of the run continues.
+it cannot buy a paid app. `Brewfile.utilities` lists Moom, which is paid — if
+your Apple ID does not own it, that entry fails, lands in the punch list, and the
+rest of the run continues.
 
 ## Post-install, by hand
 

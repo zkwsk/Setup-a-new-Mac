@@ -1,0 +1,7 @@
+# Documents, notes and time tracking.
+cask "notion"
+cask "evernote"
+cask "standard-notes"
+mas "Pages", id: 361309726
+mas "Numbers", id: 361304891
+mas "Harvest", id: 506189836

@@ -1,0 +1,9 @@
+# Desktop helpers and everyday utilities.
+cask "1password"
+cask "alfred"
+cask "hazel"
+cask "keycastr"
+cask "cyberduck"
+cask "dropbox"
+cask "utm"
+mas "Moom", id: 419330170

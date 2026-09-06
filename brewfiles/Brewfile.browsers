@@ -1,0 +1,7 @@
+# Web browsers.
+cask "zen"
+cask "google-chrome"
+cask "firefox"
+cask "brave-browser@nightly"
+cask "tor-browser"
+cask "arc"

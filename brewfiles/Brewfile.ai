@@ -1,0 +1,6 @@
+# Local models and AI coding tools.
+brew "ollama"
+brew "pi-coding-agent"
+cask "lm-studio"
+cask "claude-code"
+cask "codex"

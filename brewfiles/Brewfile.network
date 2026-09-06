@@ -1,0 +1,5 @@
+# VPN and tunnel clients.
+# @attended Approve the VPN system extensions in System Settings > Network after install.
+brew "wireguard-tools"
+cask "viscosity"
+cask "private-internet-access"
