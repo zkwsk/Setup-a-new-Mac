@@ -2,159 +2,162 @@
 
 Guidelines and scripts to set up a new Mac for web development.
 
-This setup leverages Homebrew and a series of brewfiles to automatically provision all software and tools needed to set up a Mac from a fresh install to being ready for web development, running LLMs and even some multimedia tools.
+A checkbox wizard picks what to install from the Brewfiles in `brewfiles/` and the
+post-install steps in `src/steps/`, then runs unattended — one password prompt at
+the start, and a short punch list at the end for the things macOS insists a human
+approves.
 
-If you like the setup, feel free to fork the repo and modify and add your own brewfiles with the tools that you enjoy using.
+If you like the setup, fork it and drop in your own Brewfiles.
 
 ## Preconditions
 
-1. Check out this repository to a local folder (or download it as a zip).
-2. Install Xcode Command Line Tools:
+1. Check out this repository (or download it as a zip).
+2. Sign in to the Mac App Store, if you want the `Brewfile.mas` apps.
 
-```
-xcode-select --install
-```
+Xcode Command Line Tools, Homebrew, and Node are installed by the script — you do
+not need to install them first.
 
-3. Sign in to the Mac App Store if you want App Store installs during bootstrap (enabled by default).
-
-## Run the script
-
-Important: Mac App Store installs are enabled by default.
-
-Make the script executable:
-
-```
-chmod +x bootstrap.sh
-```
-
-Run default bootstrap (includes Mac App Store installs by default):
+## Run it
 
 ```
 ./bootstrap.sh
 ```
 
-Skip Mac App Store installs (useful for VMs or no App Store sign-in):
+| | |
+|---|---|
+| `./bootstrap.sh` | run the wizard, then install what you selected |
+| `./bootstrap.sh --dry-run` | run the wizard and print the plan, change nothing |
+| `./bootstrap.sh --preflight-only` | validate every Brewfile entry and exit |
+| `./bootstrap.sh --help` | usage |
+
+There are no `--with-x` flags. Everything that used to be a flag is a checkbox.
+
+`GIT_USER_NAME` and `GIT_USER_EMAIL` set the git identity without prompting.
+
+### The wizard
 
 ```
-./bootstrap.sh --no-app-store
+? Select what to install (↑↓ move · space toggle · a all/none · enter confirm)
+❯ ◉ Packages
+    ◉ base — Core CLI tools for every machine. (11)
+      ◉ git (installed)
+      ◉ ollama
+    ◍ optional — Personal and optional apps. (18)
+    ◯ privileged — Privileged casks... (needs attention) (9)
+  ◍ Post-install steps
+      ◉ Git identity and push defaults
+      ◯ Custom keyboard layout (done 2026-09-06)
 ```
 
-Include privileged casks that may require attended sudo prompts:
+Pressing space on a group row toggles everything in that Brewfile. `◍` means a
+group is partly selected.
+
+## Adding things
+
+**A new group of packages** — drop a file in `brewfiles/`. It appears in the
+wizard automatically, ordered alphabetically by filename. No code change.
 
 ```
-./bootstrap.sh --with-privileged
+# @name AI tooling
+# @description Locally-run model tooling.
+brew "ollama"
 ```
 
-Run only privileged casks (skip everything else):
+Both directives are optional; without `@name` the label comes from the filename,
+and without `@description` it comes from the first comment line. Add
+`# @attended <text>` to sort a group last and put `<text>` in the closing punch
+list — that is how `Brewfile.privileged` is handled without the code knowing its
+name.
 
-```
-./bootstrap.sh --only-privileged
-```
+Prefix filenames with `10-`, `20-` … if you want to control install order.
 
-Set a per-step timeout (seconds) so stuck tasks fail and bootstrap continues:
+**A new post-install step** — drop a file in `src/steps/`. It appears as a
+checkbox automatically.
 
-```
-./bootstrap.sh --step-timeout=600
-```
+```ts
+import { defineStep } from './index.ts';
 
-Preflight validation is enabled by default (checks Brewfile entries before install).
-You can still force it explicitly:
-
-```
-./bootstrap.sh --preflight
-```
-
-Run only preflight validation and exit:
-
-```
-./bootstrap.sh --preflight-only
-```
-
-Skip preflight validation:
-
-```
-./bootstrap.sh --no-preflight
+export default defineStep({
+  id: 'my-step',
+  name: 'Something I want configured',
+  group: 'macOS settings',
+  phase: 'post',                          // 'pre' runs before package installs
+  when: ({ installed }) => installed.has('cask:docker'),   // optional
+  run: async ({ $, log }) => {
+    await $`defaults write com.example Key -bool true`;
+    log('done');
+  },
+});
 ```
 
-Skip post-install scripts:
+## What persists between runs
+
+`.bootstrap-state.json` (gitignored) records two things:
+
+- **Packages you unchecked.** These stay unchecked. Uncheck the multimedia apps
+  on a work machine and they will not creep back. Anything *added* to a Brewfile
+  later is unknown to the file and therefore checked — so new entries still
+  install.
+- **Steps that succeeded.** These are unchecked next time, shown as
+  `(done <date>)`. A step that failed or never ran comes back checked, so a
+  re-run naturally resumes what is unfinished.
+
+Delete the file to start from defaults again.
+
+## Sudo
+
+You are asked for your password once. The script then writes a NOPASSWD rule to
+`/etc/sudoers.d/99-setup-a-new-mac`, validated with `visudo -c` before it is
+installed, and removes it on exit — including on Ctrl-C, on error, and on a
+crash. A `RunAtLoad` LaunchDaemon deletes it at the next boot as a safety net for
+a `SIGKILL` the trap cannot catch, and every run sweeps leftovers before starting.
+
+**Your password is never written to disk.** This is why: `sudo`'s credential
+cache is scoped to a terminal and a five-minute window, so any privileged helper
+launched without our tty — which is most of what a `.pkg` cask does — misses it
+and prompts again. A policy rule has neither limit.
+
+If a run is killed in a way that skips all of the above, remove it by hand:
 
 ```
-./bootstrap.sh --no-post-install
+sudo rm -f /etc/sudoers.d/99-setup-a-new-mac
 ```
 
-Run only post-install scripts (skip dependency installs):
+### What still needs you
+
+A sudoers rule cannot suppress macOS's own authorization UI. Expect to approve
+these yourself, mostly at first launch rather than at install:
+
+- Network system extensions for NordVPN and Private Internet Access, in System Settings
+- Adobe Creative Cloud's own installer
+- Xcode Command Line Tools (a dialog at the very start)
+
+The wizard lists these in the punch list when the run finishes.
+
+### Mac App Store
+
+Sign-in cannot be scripted — `mas` 7 removed `signin`, and no preference exposes
+the account. If your selection includes App Store apps, the wizard opens the App
+Store and waits for you before the unattended phase begins.
+
+`mas` can re-download apps your Apple ID already owns and acquire free ones, but
+it cannot buy a paid app. `Brewfile.mas` lists Moom, which is paid — if your
+Apple ID does not own it, that entry fails, lands in the punch list, and the rest
+of the run continues.
+
+## Post-install, by hand
+
+1. Sign in to apps that require accounts (1Password, Dropbox, Slack, Teams, Chrome).
+2. Enable VS Code Settings Sync.
+
+## Development
 
 ```
-./bootstrap.sh --post-install-only
+npm ci
+npm run typecheck
+./bootstrap.sh --dry-run
 ```
 
-Show available options:
-
-```
-./bootstrap.sh --help
-```
-
-The script uses split Brewfiles in `brewfiles/` and runs the non-App-Store bundles by default.
-Each Brewfile entry is installed individually so one stuck cask/formula can time out and the script continues.
-You can customize install order by editing the `BREWFILES_MAIN` and `BREWFILES_APP_STORE` arrays near the top of `bootstrap.sh`.
-
-## Brewfile layout
-
-- `brewfiles/Brewfile.base`: core CLI tools
-- `brewfiles/Brewfile.runtime`: language runtimes and package managers
-- `brewfiles/Brewfile.devapps`: core developer GUI apps and dev tooling
-- `brewfiles/Brewfile.comm`: communication apps
-- `brewfiles/Brewfile.media`: media/audio/video apps
-- `brewfiles/Brewfile.optional`: personal/optional apps
-- `brewfiles/Brewfile.fonts`: fonts and font taps
-- `brewfiles/Brewfile.mas`: Mac App Store apps (enabled by default, disable with `--no-app-store`)
-- `brewfiles/Brewfile.privileged`: privileged casks (only when `--with-privileged` is used)
-
-You can also run bundles manually:
-
-```
-brew bundle --file brewfiles/Brewfile.base
-brew bundle --file brewfiles/Brewfile.runtime
-brew bundle --file brewfiles/Brewfile.devapps
-brew bundle --file brewfiles/Brewfile.fonts
-```
-
-Then later (after App Store sign-in and other onboarding):
-
-```
-brew bundle --file brewfiles/Brewfile.mas
-brew bundle --file brewfiles/Brewfile.comm
-brew bundle --file brewfiles/Brewfile.media
-brew bundle --file brewfiles/Brewfile.optional
-```
-
-Privileged pass (attended):
-
-```
-./bootstrap.sh --with-privileged
-```
-
-Privileged-only pass (attended, no other installs):
-
-```
-./bootstrap.sh --only-privileged
-```
-
-## Post-install
-
-1. Change keyboard layout to custom layout without dead keys
-2. Sign in to apps that require accounts (for example 1Password, Dropbox, Slack, Teams, Chrome).
-3. Enable VS Code Settings Sync.
-4. Trackpad speed is now set automatically to 8/10 by `scripts/system-preferences.sh` at the end of bootstrap.
-5. The bootstrap starts Docker Desktop and waits for the daemon when possible. If Docker needs first-run approval or login, finish that in the app and rerun the script.
-6. If needed for local PHP dev, add `index.php` to `DirectoryIndex` in `httpd.conf`:
-
-```
-<IfModule dir_module>
-    DirectoryIndex index.php index.html
-</IfModule>
-```
-
-## TODO
-
-- Switch to custom keyboard
+`src/` is TypeScript, run directly by Node via type stripping — there is no build
+step. `bootstrap.sh` is a thin stage-0 that installs the Command Line Tools,
+Homebrew, and Node, and owns the sudo lifecycle; everything else lives in `src/`.

@@ -28,10 +28,19 @@ jobs:
             exit 1
           fi
           xcode-select -p
-          xcodebuild -version
 
-      - name: Ensure bootstrap.sh is executable
-        run: chmod +x ./bootstrap.sh
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Run bootstrap preflight
-        run: ./bootstrap.sh --preflight-only --no-app-store
+        # CI is set, so this installs no sudoers rule and draws no wizard.
+        run: ./bootstrap.sh --preflight-only

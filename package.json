@@ -1,0 +1,22 @@
+{
+  "name": "setup-a-new-mac",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Wizard-driven provisioning for a fresh Mac",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@inquirer/core": "^10.1.14",
+    "@inquirer/prompts": "^7.5.1",
+    "zx": "^8.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}
