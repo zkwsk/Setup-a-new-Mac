@@ -1,5 +1,5 @@
 # Media and audio/video apps.
 cask "obs"
+cask "vlc"
 cask "spotify"
 cask "tidal"
-cask "vlc"
