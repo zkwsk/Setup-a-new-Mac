@@ -1,0 +1,4 @@
+# Design and creative tools.
+# @attended Adobe Creative Cloud runs its own installer and asks for admin credentials.
+cask "adobe-creative-cloud"
+cask "figma"

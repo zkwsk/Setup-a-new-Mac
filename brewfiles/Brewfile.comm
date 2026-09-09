@@ -1,3 +1,5 @@
 # Communication and collaboration apps.
 cask "slack"
 cask "discord"
+cask "microsoft-teams"
+cask "zoom"
