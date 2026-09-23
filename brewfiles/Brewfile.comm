@@ -3,5 +3,6 @@ cask "slack"
 cask "discord"
 cask "microsoft-teams"
 cask "zoom"
+cask "imaging-edge-webcam"
 mas "Whats App", id: 310633997
 mas "Telegram", id: 747648890
