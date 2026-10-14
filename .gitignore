@@ -1,3 +1,4 @@
 node_modules/
 .bootstrap-state.json
 logs/
+.DS_Store
