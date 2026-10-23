@@ -2,10 +2,10 @@
 brew "ollama"
 brew "pi-coding-agent"
 brew "opencode"
+brew "can1357/tap/omp"
 cask "lm-studio"
 cask "claude"
 cask "claude-code"
 cask "chatgpt"
 cask "codex"
 cask "opencode-desktop"
-
