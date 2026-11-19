@@ -127,7 +127,8 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
 fi
 
 if [[ "$(uname -m)" != "arm64" ]]; then
-    echo "Warning: built for Apple Silicon; continuing anyway on $(uname -m)."
+    echo "Intel Mac: Homebrew no longer ships Intel bottles, so formulae build"
+    echo "from source. Expect the run to take hours."
 fi
 
 if ! xcode-select -p >/dev/null 2>&1; then
@@ -147,10 +148,16 @@ fi
 
 # --- homebrew ---------------------------------------------------------------
 
+# The current installer (and Homebrew.pkg) refuse Intel Macs, though brew itself
+# still runs there as a Tier 3 platform. On Intel, use the last installer
+# revision that supported it; it clones the latest brew into /usr/local.
+BREW_INSTALLER_REF="HEAD"
+[[ "$(uname -m)" == "x86_64" ]] && BREW_INSTALLER_REF="f4aa1b1ca5b256954dbde0315455fb259cdfc45a"
+
 if ! command -v brew >/dev/null 2>&1; then
     echo "Installing Homebrew..."
     NONINTERACTIVE=1 /bin/bash -c \
-        "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        "$(curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/$BREW_INSTALLER_REF/install.sh")"
 fi
 
 if [[ -x /opt/homebrew/bin/brew ]]; then

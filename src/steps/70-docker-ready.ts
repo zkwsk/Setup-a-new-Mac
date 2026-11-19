@@ -9,7 +9,7 @@ export default defineStep({
   description: 'installs the privileged helper so Docker does not prompt on first launch',
   group: 'Applications',
   phase: 'post',
-  when: ({ installed }) => installed.has('cask:docker'),
+  when: ({ installed }) => installed.has('cask:docker-desktop'),
   run: async ({ $, log }) => {
     // Docker needs Rosetta for amd64 emulation on Apple Silicon.
     const rosetta = await $({ nothrow: true })`/usr/bin/pgrep -q oahd`;

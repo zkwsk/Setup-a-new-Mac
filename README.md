@@ -18,6 +18,19 @@ If you like the setup, fork it and drop in your own Brewfiles.
 Xcode Command Line Tools, Homebrew, and Node are installed by the script — you do
 not need to install them first.
 
+### Intel Macs
+
+Intel works, but Homebrew treats it as an unsupported (Tier 3) platform:
+
+- The current Homebrew installer refuses Intel, so `bootstrap.sh` uses the last
+  installer revision that supported it. Homebrew itself still updates normally.
+- There are no Intel bottles, so every formula compiles from source. The
+  per-entry timeout is lifted for formulae on Intel; plan for an overnight run.
+- Formulae that need full Xcode to build (e.g. `deno`) fail until Xcode is
+  installed. Re-run the script after the App Store has installed it.
+- Casks pick their Intel download automatically. `lm-studio` is Apple Silicon
+  only and fails on Intel — uncheck it and it stays unchecked.
+
 ## Run it
 
 ```
@@ -87,7 +100,7 @@ export default defineStep({
   name: 'Something I want configured',
   group: 'macOS settings',
   phase: 'post',                          // 'pre' runs before package installs
-  when: ({ installed }) => installed.has('cask:docker'),   // optional
+  when: ({ installed }) => installed.has('cask:docker-desktop'),   // optional
   run: async ({ $, log }) => {
     await $`defaults write com.example Key -bool true`;
     log('done');

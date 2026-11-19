@@ -13,6 +13,9 @@ export type Failure = {
 
 const brew = $({ timeout: STEP_TIMEOUT, nothrow: true });
 
+/** Intel has no bottles, so formulae compile from source and can take hours. */
+const formula = process.arch === 'x64' ? $({ nothrow: true }) : brew;
+
 type Installer = (entry: Entry, installed: ReadonlySet<string>) => Promise<Failure | null>;
 
 const failure = (what: string, result: { stderr: string; stdout: string }): Failure => ({
@@ -28,7 +31,7 @@ const installers: Record<EntryType, Installer> = {
   },
 
   brew: async (entry) => {
-    const result = await brew`brew install ${entry.name}`;
+    const result = await formula`brew install ${entry.name}`;
     return result.exitCode === 0 ? null : failure(`brew install ${entry.name}`, result);
   },
 
