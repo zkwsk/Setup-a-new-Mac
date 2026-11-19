@@ -1,6 +1,6 @@
 # Desktop helpers and everyday utilities.
 cask "1password"
-brew "1password-cli"
+cask "1password-cli"
 cask "alfred"
 cask "hazel"
 cask "keycastr"

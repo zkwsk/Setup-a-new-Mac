@@ -3,6 +3,10 @@ import path from 'node:path';
 
 export type EntryType = 'tap' | 'brew' | 'cask' | 'mas';
 
+export type Cpu = 'arm' | 'intel';
+
+export const thisCpu: Cpu = process.arch === 'arm64' ? 'arm' : 'intel';
+
 export type Entry = {
   readonly type: EntryType;
   /** Formula/cask/tap name, or the app name for `mas` entries. */
@@ -11,6 +15,8 @@ export type Entry = {
   readonly id: string | null;
   /** Stable identity used by the state file. */
   readonly key: string;
+  /** Set by a trailing `if Hardware::CPU.arm?` / `.intel?`; null on every Mac. */
+  readonly cpu: Cpu | null;
   readonly raw: string;
 };
 
@@ -49,7 +55,8 @@ const parseLine = (raw: string): Entry | null => {
 
     const name = match[1];
     const id = type === 'mas' ? (match[2] ?? null) : null;
-    return { type, name, id, key: `${type}:${id ?? name}`, raw: line };
+    const cpu = (/\sif\s+Hardware::CPU\.(arm|intel)\?/.exec(line)?.[1] ?? null) as Cpu | null;
+    return { type, name, id, key: `${type}:${id ?? name}`, cpu, raw: line };
   }
 
   return null;
@@ -119,6 +126,12 @@ export const orderedEntries = (group: Group): readonly Entry[] => [
   ...group.entries.filter((entry) => entry.type === 'tap'),
   ...group.entries.filter((entry) => entry.type !== 'tap'),
 ];
+
+/** Drops entries meant for the other CPU architecture. */
+export const forCpu = (group: Group, cpu: Cpu): Group => ({
+  ...group,
+  entries: group.entries.filter((entry) => entry.cpu === null || entry.cpu === cpu),
+});
 
 /** Alphabetical, but attended groups last so the unattended bulk runs first. */
 export const orderGroups = (groups: readonly Group[]): readonly Group[] =>

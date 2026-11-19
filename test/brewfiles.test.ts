@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 import {
   discoverBrewfiles,
+  forCpu,
   orderGroups,
   orderedEntries,
   parseBrewfile,
@@ -48,6 +49,30 @@ describe('parseBrewfile', () => {
 
     assert.equal(entries.length, 1);
     assert.equal(entries[0]?.name, 'git');
+  });
+
+  it('reads a trailing Hardware::CPU condition', () => {
+    const { entries } = group(`
+      brew "git"
+      brew "rust" if Hardware::CPU.arm?
+      cask "ollama-app" if Hardware::CPU.intel? # prebuilt
+    `);
+
+    assert.deepEqual(
+      entries.map((e) => [e.name, e.cpu]),
+      [
+        ['git', null],
+        ['rust', 'arm'],
+        ['ollama-app', 'intel'],
+      ],
+    );
+  });
+
+  it('forCpu keeps shared entries and drops the other CPU’s', () => {
+    const parsed = group('brew "git"\nbrew "rust" if Hardware::CPU.arm?\ncask "ollama-app" if Hardware::CPU.intel?');
+
+    assert.deepEqual(forCpu(parsed, 'arm').entries.map((e) => e.name), ['git', 'rust']);
+    assert.deepEqual(forCpu(parsed, 'intel').entries.map((e) => e.name), ['git', 'ollama-app']);
   });
 
   it('warns on an unrecognised line instead of failing the file', () => {

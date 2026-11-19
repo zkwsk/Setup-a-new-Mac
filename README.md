@@ -18,6 +18,26 @@ If you like the setup, fork it and drop in your own Brewfiles.
 Xcode Command Line Tools, Homebrew, and Node are installed by the script — you do
 not need to install them first.
 
+### Intel Macs
+
+Intel works, but Homebrew treats it as an unsupported (Tier 3) platform:
+
+- The current Homebrew installer refuses Intel, so `bootstrap.sh` uses the last
+  installer revision that supported it. Homebrew itself still updates normally.
+- There are no Intel bottles, so formulae compile from source, and the
+  per-entry timeout is lifted for them on Intel. Anything that would drag in
+  `llvm` or `rust` (ollama, bun, deno, opencode, pi, herdr, rust) is marked
+  `if Hardware::CPU.arm?` and replaced on Intel by a cask, the vendor's tap, or
+  the **Prebuilt dev tools** step (npm, rustup and herdr's installer). What is
+  left (php, python, neovim, git …) still builds from source, but the slowest
+  builds are gone.
+- Casks pick their Intel download automatically. `lm-studio` is Apple Silicon
+  only and is hidden on Intel.
+
+A Brewfile entry ending in `if Hardware::CPU.arm?` or `if Hardware::CPU.intel?`
+only appears on that CPU. It is the same syntax `brew bundle` understands.
+`--preflight-only` still validates both.
+
 ## Run it
 
 ```
@@ -87,7 +107,7 @@ export default defineStep({
   name: 'Something I want configured',
   group: 'macOS settings',
   phase: 'post',                          // 'pre' runs before package installs
-  when: ({ installed }) => installed.has('cask:docker'),   // optional
+  when: ({ installed }) => installed.has('cask:docker-desktop'),   // optional
   run: async ({ $, log }) => {
     await $`defaults write com.example Key -bool true`;
     log('done');

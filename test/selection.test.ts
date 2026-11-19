@@ -7,7 +7,7 @@ import type { Step } from '../src/steps/index.ts';
 
 const entry = (key: string): Entry => {
   const [type, name] = key.split(':') as ['cask', string];
-  return { type, name, id: null, key, raw: '' };
+  return { type, name, id: null, key, cpu: null, raw: '' };
 };
 
 const group = (file: string, keys: readonly string[]): Group => ({

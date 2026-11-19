@@ -4,8 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { $, chalk } from 'zx';
 import {
   discoverBrewfiles,
+  forCpu,
   orderGroups,
   orderedEntries,
+  thisCpu,
   type Entry,
   type Group,
 } from './brewfiles.ts';
@@ -128,17 +130,20 @@ const main = async () => {
 
   const parsed = await discoverBrewfiles(path.join(repoRoot, 'brewfiles'));
   parsed.flatMap((result) => result.warnings).forEach((w) => console.warn(chalk.yellow(`! ${w}`)));
-  const groups = orderGroups(parsed.map((result) => result.group));
+  const allGroups = orderGroups(parsed.map((result) => result.group));
 
+  // Preflight validates every entry, including those for the other CPU.
   if (preflightOnly) {
     heading('Preflight');
-    const issues = await preflight(groups);
+    const issues = await preflight(allGroups);
     issues.forEach((issue) => console.error(chalk.red(`  ✗ ${issue}`)));
 
     if (issues.length > 0) process.exitCode = 1;
-    else console.log(chalk.green(`  ✓ ${groups.flatMap((g) => g.entries).length} entries valid`));
+    else console.log(chalk.green(`  ✓ ${allGroups.flatMap((g) => g.entries).length} entries valid`));
     return;
   }
+
+  const groups = allGroups.map((group) => forCpu(group, thisCpu));
 
   const state = await loadState(STATE_FILE);
   const installed = await installedPackages();
