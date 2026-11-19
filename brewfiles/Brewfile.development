@@ -1,10 +1,11 @@
 # Development applications, runtimes and package managers.
 brew "nvm"
-brew "bun"
-brew "deno"
+brew "bun" if Hardware::CPU.arm?
+brew "oven-sh/bun/bun" if Hardware::CPU.intel?
+brew "deno" if Hardware::CPU.arm?
 brew "python"
 brew "php"
-brew "herdr"
+brew "herdr" if Hardware::CPU.arm?
 cask "oracle-jdk"
 cask "docker-desktop"
 cask "iterm2"

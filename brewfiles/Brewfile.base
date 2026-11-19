@@ -4,6 +4,6 @@ brew "mas"
 brew "tmux"
 brew "nmap"
 brew "neovim"
-brew "rust"
+brew "rust" if Hardware::CPU.arm?
 brew "go"
 brew "act"

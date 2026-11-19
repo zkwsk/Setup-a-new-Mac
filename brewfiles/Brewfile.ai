@@ -1,9 +1,11 @@
 # Local models and AI coding tools.
-brew "ollama"
-brew "pi-coding-agent"
-brew "opencode"
+# Intel: rust-built CLIs come prebuilt from the "Prebuilt dev tools" step.
+brew "ollama" if Hardware::CPU.arm?
+cask "ollama-app" if Hardware::CPU.intel?
+brew "pi-coding-agent" if Hardware::CPU.arm?
+brew "opencode" if Hardware::CPU.arm?
 brew "can1357/tap/omp"
-cask "lm-studio"
+cask "lm-studio" if Hardware::CPU.arm?
 cask "claude"
 cask "claude-code"
 cask "chatgpt"
